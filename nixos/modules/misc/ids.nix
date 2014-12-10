@@ -175,6 +175,7 @@
       gitlab = 165;
       tox-bootstrapd = 166;
       cadvisor = 167;
+      synapse = 168;
 
       # When adding a uid, make sure it doesn't match an existing gid. And don't use uids above 399!
 
