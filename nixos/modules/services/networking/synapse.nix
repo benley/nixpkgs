@@ -9,8 +9,8 @@ let
   configOptions = {
     haproxy_config = {
       reload_command = "systemctl reload-or-restart haproxy";
-      config_file_path = "...";
-      socket_file_path = "...";
+      config_file_path = "/var/lib/synapse/haproxy.cfg";
+      socket_file_path = "/var/run/haproxy.sock";
       do_writes = true;
       do_reloads = true;
       do_socket = true;
@@ -18,10 +18,7 @@ let
     };
   };
 
-  conf = writeText "synapse.yaml" ''
-    blahblah: blahblah
-    etc: blahblah
-  '';
+  synapseConf = writeText "synapse.yaml" (builtins.toJSON configOptions);
 
   #devices = attrValues (filterAttrs (_: i: i != null) cfg.interface);
   #systemdDevices = flip map devices
@@ -53,8 +50,11 @@ in {
     };
 
     environment = {
-      etc."synapse.yaml".text = builtins.toJSON configOptions;
-      systemPackages = with pkgs; [ rubyLibs.synapse ];
+      #etc."synapse.yaml".text = builtins.toJSON configOptions;
+      systemPackages = [
+        pkgs.rubyLibs.synapse
+        pkgs.haproxy
+      ];
     };
 
     systemd.services.synapse = {
@@ -62,15 +62,30 @@ in {
       after = [ "network.target" ]; #++ systemdDevices;
       #bindsTo = systemdDevices;
       restartTriggers = [
-        config.environment.etc."synapse.yaml".source
-        ];
+        synapseConf
+        #config.environment.etc."synapse.yaml".source
+      ];
 
       serviceConfig = {
-        ExecStart = "@${pkgs.rubyLibs.synapse}/bin/synapse -c ${conf}";
+        ExecStart = "@${pkgs.rubyLibs.synapse}/bin/synapse -c ${synapseConf}";
         #ExecReload =
         PermissionsStartOnly = true;
         User = "synapse";
       };
     };
+
+    systemd.services.haproxy = {
+      description = "HAProxy";
+      after = [ "network.target" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "forking";
+        PIDFile = "/var/run/haproxy.pid";
+        ExecStartPre = "${pkgs.haproxy}/sbin/haproxy -c -q -f ${haproxyCfg}";
+        ExecStart = "${pkgs.haproxy}/sbin/haproxy -D -f ${haproxyCfg} -p /var/run/haproxy.pid";
+        ExecReload = "-${pkgs.bash}/bin/bash -c \"exec ${pkgs.haproxy}/sbin/haproxy -D -f ${haproxyCfg} -p /var/run/haproxy.pid -sf $MAINPID\"";
+      };
+    };
+
   };
 }
