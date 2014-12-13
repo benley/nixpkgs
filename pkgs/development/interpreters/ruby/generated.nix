@@ -698,7 +698,7 @@ We are happy to report that this issue has been resolved.'';
         longDescription = ''A simple REST client for the Docker Remote API'';
       };
       name = ''docker-api-1.7.6'';
-      requiredGems = [ g.excon_0_42_1 g.json_1_8_1 g.archive_tar_minitar_0_5_2 ];
+      requiredGems = [ g.excon_0_41_0 g.json_1_8_1 g.archive_tar_minitar_0_5_2 ];
       sha256 = ''1ari4f2rk9w5j5mci7wlqiabqispd2pr9m6qwbqq1ryrlqvksr28'';
     };
     domain_name_0_5_22 = {
