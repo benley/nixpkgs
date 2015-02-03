@@ -880,7 +880,6 @@ let
   chunksync = callPackage ../tools/backup/chunksync { };
 
   cjdns = callPackage ../tools/networking/cjdns { };
-  cjdcmd-ng = callPackage ../tools/networking/cjdns/cjdcmd-ng { };
 
   cksfv = callPackage ../tools/networking/cksfv { };
 
