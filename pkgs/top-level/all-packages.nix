@@ -8272,6 +8272,8 @@ let
   postgresql_jdbc = callPackage ../servers/sql/postgresql/jdbc { };
 
   prometheus = callPackage ../servers/monitoring/prometheus { };
+  prometheus-alertmanager =
+    callPackage ../servers/monitoring/prometheus/alertmanager { };
 
   psqlodbc = callPackage ../servers/sql/postgresql/psqlodbc { };
 
