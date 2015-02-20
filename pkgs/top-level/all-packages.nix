@@ -8274,6 +8274,8 @@ let
   prometheus = callPackage ../servers/monitoring/prometheus { };
   prometheus-alertmanager =
     callPackage ../servers/monitoring/prometheus/alertmanager { };
+  prometheus-haproxy-exporter =
+    callPackage ../servers/monitoring/prometheus/haproxy_exporter { };
 
   psqlodbc = callPackage ../servers/sql/postgresql/psqlodbc { };
 
