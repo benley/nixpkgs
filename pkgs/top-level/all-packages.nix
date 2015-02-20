@@ -8278,6 +8278,8 @@ let
     callPackage ../servers/monitoring/prometheus/cli { };
   prometheus-haproxy-exporter =
     callPackage ../servers/monitoring/prometheus/haproxy_exporter { };
+  prometheus-node-exporter =
+    callPackage ../servers/monitoring/prometheus/node_exporter { };
   prometheus-pushgateway =
     callPackage ../servers/monitoring/prometheus/pushgateway { };
 
