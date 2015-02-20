@@ -8091,6 +8091,8 @@ let
     callPackage ../servers/monitoring/prometheus/alertmanager { };
   prometheus-haproxy-exporter =
     callPackage ../servers/monitoring/prometheus/haproxy_exporter { };
+  prometheus-pushgateway =
+    callPackage ../servers/monitoring/prometheus/pushgateway { };
 
   psqlodbc = callPackage ../servers/sql/postgresql/psqlodbc { };
 
