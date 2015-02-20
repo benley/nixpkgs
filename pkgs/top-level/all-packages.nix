@@ -4250,6 +4250,8 @@ let
     pythonProtobuf = pythonPackages.protobuf;
   };
 
+  mesos-dns = callPackage ../servers/dns/mesos-dns { };
+
   mujs = callPackage ../development/interpreters/mujs { };
 
   nix-exec = callPackage ../development/interpreters/nix-exec {
