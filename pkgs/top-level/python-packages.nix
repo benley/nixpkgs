@@ -1085,6 +1085,8 @@ let
     # The tests seem to require AWS credentials.
     doCheck = false;
 
+    patches = [ ../development/python-modules/boto/content-length-str.patch ];
+
     meta = {
       homepage = https://github.com/boto/boto;
 
