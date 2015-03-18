@@ -7,8 +7,8 @@ self: super: {
   # Some packages need a non-core version of Cabal.
   Cabal_1_18_1_6 = dontCheck super.Cabal_1_18_1_6;
   Cabal_1_20_0_3 = dontCheck super.Cabal_1_20_0_3;
-  Cabal_1_22_0_0 = dontCheck super.Cabal_1_22_0_0;
-  cabal-install = dontCheck (super.cabal-install.override { Cabal = self.Cabal_1_22_0_0; });
+  Cabal_1_22_1_1 = dontCheck super.Cabal_1_22_1_1;
+  cabal-install = dontCheck (super.cabal-install.override { Cabal = self.Cabal_1_22_1_1; });
 
   # Break infinite recursions.
   digest = super.digest.override { inherit (pkgs) zlib; };
@@ -36,8 +36,29 @@ self: super: {
   # Link the proper version.
   zeromq4-haskell = super.zeromq4-haskell.override { zeromq = pkgs.zeromq4; };
 
-  # "curl" means pkgs.curl
-  git-annex = super.git-annex.override { inherit (pkgs) git rsync gnupg1 curl lsof openssh which bup perl wget; };
+  # These changes are required to support Darwin.
+  git-annex = (disableSharedExecutables super.git-annex).override {
+    dbus = if pkgs.stdenv.isLinux then self.dbus else null;
+    fdo-notify = if pkgs.stdenv.isLinux then self.fdo-notify else null;
+    hinotify = if pkgs.stdenv.isLinux then self.hinotify else self.fsnotify;
+  };
+
+  # CUDA needs help finding the SDK headers and libraries.
+  cuda = overrideCabal super.cuda (drv: {
+    extraLibraries = (drv.extraLibraries or []) ++ [pkgs.linuxPackages.nvidia_x11];
+    configureFlags = (drv.configureFlags or []) ++
+      pkgs.lib.optional pkgs.stdenv.is64bit "--extra-lib-dirs=${pkgs.cudatoolkit}/lib64" ++ [
+      "--extra-lib-dirs=${pkgs.cudatoolkit}/lib"
+      "--extra-include-dirs=${pkgs.cudatoolkit}/usr_include"
+    ];
+    preConfigure = ''
+      unset CC          # unconfuse the haskell-cuda configure script
+      sed -i -e 's|/usr/local/cuda|${pkgs.cudatoolkit}|g' configure
+    '';
+  });
+
+  # The package doesn't know about the AL include hierarchy.
+  al = appendConfigureFlag super.al "--extra-include-dirs=${pkgs.openal}/include/AL";
 
   # Depends on code distributed under a non-free license.
   bindings-yices = dontDistribute super.bindings-yices;
@@ -45,14 +66,23 @@ self: super: {
   yices-easy = dontDistribute super.yices-easy;
   yices-painless = dontDistribute super.yices-painless;
 
-  # This package overrides the one from pkgs.gnome.
-  gtkglext = super.gtkglext.override { inherit (pkgs.gnome) gtkglext; };
-
   # The test suite refers to its own library with an invalid version constraint.
   presburger = dontCheck super.presburger;
 
   # Won't find it's header files without help.
   sfml-audio = appendConfigureFlag super.sfml-audio "--extra-include-dirs=${pkgs.openal}/include/AL";
+
+  hzk = overrideCabal super.hzk (drv: {
+    preConfigure = "sed -i -e /include-dirs/d hzk.cabal";
+    configureFlags =  "--extra-include-dirs=${pkgs.zookeeper_mt}/include/zookeeper";
+    doCheck = false;
+  });
+
+  haskakafka = overrideCabal super.haskakafka (drv: {
+    preConfigure = "sed -i -e /extra-lib-dirs/d -e /include-dirs/d haskakafka.cabal";
+    configureFlags =  "--extra-include-dirs=${pkgs.rdkafka}/include/librdkafka";
+    doCheck = false;
+   });
 
   # Foreign dependency name clashes with another Haskell package.
   libarchive-conduit = super.libarchive-conduit.override { archive = pkgs.libarchive; };
@@ -87,8 +117,11 @@ self: super: {
   hxt = dontHaddock super.hxt;                                  # https://github.com/UweSchmidt/hxt/issues/38
   markdown-unlit = dontHaddock super.markdown-unlit;
   network-conduit = dontHaddock super.network-conduit;
+  shakespeare-js = dontHaddock super.shakespeare-js;
   shakespeare-text = dontHaddock super.shakespeare-text;
-  uhc-light = dontHaddock super.uhc-light;                      # https://github.com/UU-ComputerScience/uhc/issues/45
+  types-compat = dontHaddock super.types-compat;                # https://github.com/philopon/apiary/issues/15
+  wai-test = dontHaddock super.wai-test;
+  zlib-conduit = dontHaddock super.zlib-conduit;
 
   # jailbreak doesn't get the job done because the Cabal file uses conditionals a lot.
   darcs = overrideCabal super.darcs (drv: {
@@ -114,6 +147,24 @@ self: super: {
   # https://github.com/haskell/vector/issues/47
   vector = if pkgs.stdenv.isi686 then appendConfigureFlag super.vector "--ghc-options=-msse2" else super.vector;
 
+  # cabal2nix likes to generate dependencies on hinotify when hfsevents is really required
+  # on darwin: https://github.com/NixOS/cabal2nix/issues/146
+  hinotify = if pkgs.stdenv.isDarwin then super.hfsevents else super.hinotify;
+
+  # FSEvents API is very buggy and tests are unreliable. See
+  # http://openradar.appspot.com/10207999 and similar issues
+  fsnotify = if pkgs.stdenv.isDarwin then dontCheck super.fsnotify else super.fsnotify;
+
+  # Prevents needing to add security_tool as a build tool to all of x509-system's
+  # dependencies.
+  # TODO: use pkgs.darwin.security_tool once we can build it
+  x509-system = let security_tool = "/usr";
+  in overrideCabal super.x509-system (drv: {
+    patchPhase = (drv.patchPhase or "") + pkgs.stdenv.lib.optionalString pkgs.stdenv.isDarwin ''
+      substituteInPlace System/X509/MacOS.hs --replace security ${security_tool}/bin/security
+    '';
+  });
+
   # Does not compile: <http://hydra.cryp.to/build/469842/nixlog/1/raw>.
   base_4_7_0_2 = markBroken super.base_4_7_0_2;
 
@@ -138,8 +189,9 @@ self: super: {
   wizards = doJailbreak super.wizards;
 
   # https://github.com/NixOS/cabal2nix/issues/136
-  gtk = addBuildDepends super.gtk [pkgs.pkgconfig pkgs.gtk];
   glib = addBuildDepends super.glib [pkgs.pkgconfig pkgs.glib];
+  gtk3 = super.gtk3.override { inherit (pkgs) gtk3; };
+  gtk = addBuildDepends super.gtk [pkgs.pkgconfig pkgs.gtk];
 
   # https://github.com/jgm/zip-archive/issues/21
   zip-archive = addBuildTool super.zip-archive pkgs.zip;
@@ -149,6 +201,9 @@ self: super: {
 
   # Upstream notified by e-mail.
   permutation = dontCheck super.permutation;
+
+  # https://github.com/vincenthz/hs-tls/issues/102
+  tls = dontCheck super.tls;
 
   # https://github.com/jputcu/serialport/issues/25
   serialport = dontCheck super.serialport;
@@ -164,31 +219,42 @@ self: super: {
 
   # These packages try to execute non-existent external programs.
   cmaes = dontCheck super.cmaes;                        # http://hydra.cryp.to/build/498725/log/raw
+  dbmigrations = dontCheck super.dbmigrations;
   filestore = dontCheck super.filestore;
   graceful = dontCheck super.graceful;
   hakyll = dontCheck super.hakyll;
   Hclip = dontCheck super.Hclip;
   HList = dontCheck super.HList;
   memcached-binary = dontCheck super.memcached-binary;
+  persistent-zookeeper = dontCheck super.persistent-zookeeper;
+  pocket-dns = dontCheck super.pocket-dns;
   postgresql-simple = dontCheck super.postgresql-simple;
+  postgrest = dontCheck super.postgrest;
   snowball = dontCheck super.snowball;
+  test-sandbox = dontCheck super.test-sandbox;
   wai-middleware-hmac = dontCheck super.wai-middleware-hmac;
+  wai-middleware-throttle = dontCheck super.wai-middleware-throttle; # https://github.com/creichert/wai-middleware-throttle/issues/1
   xmlgen = dontCheck super.xmlgen;
 
   # These packages try to access the network.
+  amqp = dontCheck super.amqp;
+  amqp-conduit = dontCheck super.amqp-conduit;
   concurrent-dns-cache = dontCheck super.concurrent-dns-cache;
   dbus = dontCheck super.dbus;                          # http://hydra.cryp.to/build/498404/log/raw
   hadoop-rpc = dontCheck super.hadoop-rpc;              # http://hydra.cryp.to/build/527461/nixlog/2/raw
   hasql = dontCheck super.hasql;                        # http://hydra.cryp.to/build/502489/nixlog/4/raw
+  hjsonschema = overrideCabal super.hjsonschema (drv: { testTarget = "local"; });
   holy-project = dontCheck super.holy-project;          # http://hydra.cryp.to/build/502002/nixlog/1/raw
   http-client = dontCheck super.http-client;            # http://hydra.cryp.to/build/501430/nixlog/1/raw
   http-conduit = dontCheck super.http-conduit;          # http://hydra.cryp.to/build/501966/nixlog/1/raw
   js-jquery = dontCheck super.js-jquery;
   marmalade-upload = dontCheck super.marmalade-upload;  # http://hydra.cryp.to/build/501904/nixlog/1/raw
-  network-transport-zeromq = dontCheck super.network-transport-zeromq; # https://github.com/tweag/network-transport-zeromq/issues/30
   network-transport-tcp = dontCheck super.network-transport-tcp;
+  network-transport-zeromq = dontCheck super.network-transport-zeromq; # https://github.com/tweag/network-transport-zeromq/issues/30
   raven-haskell = dontCheck super.raven-haskell;        # http://hydra.cryp.to/build/502053/log/raw
   riak = dontCheck super.riak;                          # http://hydra.cryp.to/build/498763/log/raw
+  scotty-binding-play = dontCheck super.scotty-binding-play;
+  slack-api = dontCheck super.slack-api;                # https://github.com/mpickering/slack-api/issues/5
   stackage = dontCheck super.stackage;                  # http://hydra.cryp.to/build/501867/nixlog/1/raw
   warp = dontCheck super.warp;                          # http://hydra.cryp.to/build/501073/nixlog/5/raw
   wreq = dontCheck super.wreq;                          # http://hydra.cryp.to/build/501895/nixlog/1/raw
@@ -262,6 +328,7 @@ self: super: {
   hedn = dontCheck super.hedn;
   hgdbmi = dontCheck super.hgdbmi;
   hi = dontCheck super.hi;
+  hierarchical-clustering = dontCheck super.hierarchical-clustering;
   hmatrix-tests = dontCheck super.hmatrix-tests;
   hPDB-examples = dontCheck super.hPDB-examples;
   hquery = dontCheck super.hquery;
@@ -276,7 +343,6 @@ self: super: {
   http-client-openssl = dontCheck super.http-client-openssl;
   http-client-tls = dontCheck super.http-client-tls;
   ihaskell = dontCheck super.ihaskell;
-  influxdb = dontCheck super.influxdb;
   itanium-abi = dontCheck super.itanium-abi;
   katt = dontCheck super.katt;
   language-slice = dontCheck super.language-slice;
@@ -330,6 +396,9 @@ self: super: {
   xcffib = dontCheck super.xcffib;
   xsd = dontCheck super.xsd;
 
+  # https://bitbucket.org/wuzzeb/webdriver-utils/issue/1/hspec-webdriver-101-cant-compile-its-test
+  hspec-webdriver = markBroken super.hspec-webdriver;
+
   # The build fails with the most recent version of c2hs.
   ncurses = super.ncurses.override { c2hs = self.c2hs_0_20_1; };
 
@@ -351,14 +420,6 @@ self: super: {
 
   # https://github.com/chrisdone/hindent/issues/83
   hindent = dontCheck super.hindent;
-
-  # https://github.com/begriffs/postgrest/issues/127
-  postgrest = dontDistribute super.postgrest;
-
-  # Needs older versions of its dependencies.
-  structured-haskell-mode = (dontJailbreak super.structured-haskell-mode).override {
-    haskell-src-exts = self.haskell-src-exts_1_15_0_1;  # https://github.com/chrisdone/structured-haskell-mode/issues/90
-  };
 
   # Expect to find sendmail(1) in $PATH.
   mime-mail = appendConfigureFlag super.mime-mail "--ghc-option=-DMIME_MAIL_SENDMAIL_PATH=\"sendmail\"";
@@ -400,14 +461,173 @@ self: super: {
   # https://github.com/haskell-hub/hub-src/issues/24
   hub = markBrokenVersion "1.4.0" super.hub;
 
-  # https://github.com/audreyt/MoeDict.hs/issues/1
-  MoeDict = markBrokenVersion "0.0.1" super.MoeDict;
-
   # https://github.com/pixbi/duplo/issues/25
   duplo = dontCheck super.duplo;
 
-  # https://github.com/seagreen/hjsonschema/issues/4
-  hjsonschema = dontCheck super.hjsonschema;
+  # Nix-specific workaround
+  xmonad = appendPatch super.xmonad ./xmonad-nix.patch;
+
+  # https://github.com/evanrinehart/mikmod/issues/1
+  mikmod = addExtraLibrary super.mikmod pkgs.libmikmod;
+
+  # https://github.com/basvandijk/threads/issues/10
+  threads = dontCheck super.threads;
+
+  # https://github.com/ucsd-progsys/liquid-fixpoint/issues/44
+  liquid-fixpoint = overrideCabal super.liquid-fixpoint (drv: { preConfigure = "patchShebangs ."; });
+
+  # LLVM 3.5 breaks GHC: https://ghc.haskell.org/trac/ghc/ticket/9142.
+  GlomeVec = super.GlomeVec.override { llvm = pkgs.llvm_34; };  # https://github.com/jimsnow/glome/issues/2
+  gloss-raster = super.gloss-raster.override { llvm = pkgs.llvm_34; };
+  repa-examples = super.repa-examples.override { llvm = pkgs.llvm_34; };
+
+  # Missing module.
+  rematch = dontCheck super.rematch;            # https://github.com/tcrayford/rematch/issues/5
+  rematch-text = dontCheck super.rematch-text;  # https://github.com/tcrayford/rematch/issues/6
+
+  # Upstream notified by e-mail.
+  MonadCompose = markBrokenVersion "0.2.0.0" super.MonadCompose;
+
+  # Make distributed-process-platform compile until next version
+  distributed-process-platform = overrideCabal super.distributed-process-platform (drv: {
+    patchPhase = "mv Setup.hs Setup.lhs";
+    doCheck = false;
+    doHaddock = false;
+  });
+
+  # This packages compiles 4+ hours on a fast machine. That's just unreasonable.
+  CHXHtml = dontDistribute super.CHXHtml;
+
+  # https://github.com/bos/bloomfilter/issues/7
+  bloomfilter = overrideCabal super.bloomfilter (drv: { broken = !pkgs.stdenv.is64bit; });
+
+  # https://github.com/ekmett/exceptions/issues/40
+  exceptions = dontCheck super.exceptions;
+
+  # https://github.com/NixOS/nixpkgs/issues/6350
+  paypal-adaptive-hoops = overrideCabal super.paypal-adaptive-hoops (drv: { testTarget = "local"; });
+
+  # https://github.com/seanparsons/wiring/issues/1
+  wiring = markBrokenVersion super.wiring;
+
+  # https://github.com/jwiegley/simple-conduit/issues/2
+  simple-conduit = markBroken super.simple-conduit;
+
+  # https://github.com/srijs/hwsl2/issues/1
+  hwsl2 = markBroken super.hwsl2;
+
+  # https://code.google.com/p/linux-music-player/issues/detail?id=1
+  mp = markBroken super.mp;
+
+  # Depends on broken lmdb package.
+  vcache = markBroken super.vcache;
+
+  # https://github.com/afcowie/http-streams/issues/80
+  http-streams = dontCheck super.http-streams;
+
+  # https://github.com/vincenthz/hs-asn1/issues/12
+  asn1-encoding = dontCheck super.asn1-encoding;
+
+  # wxc needs help deciding which version of GTK to use.
+  wxc = overrideCabal (super.wxc.override { wxGTK = pkgs.wxGTK29; }) (drv: {
+    patches = [ ./wxc-no-ldconfig.patch ];
+    doHaddock = false;
+    postInstall = "cp -v dist/build/libwxc.so.${drv.version} $out/lib/libwxc.so";
+  });
+  wxcore = super.wxcore.override { wxGTK = pkgs.wxGTK29; };
+
+  # Depends on QuickCheck 1.x.
+  ersatz = dontCheck (super.ersatz.override { QuickCheck = self.QuickCheck_1_2_0_1; }); # https://github.com/ekmett/ersatz/issues/8
+  HaVSA = super.HaVSA.override { QuickCheck = self.QuickCheck_1_2_0_1; };
+  test-framework-quickcheck = super.test-framework-quickcheck.override { QuickCheck = self.QuickCheck_1_2_0_1; };
+
+  # Doesn't support "this system". Linux? Needs investigation.
+  lhc = markBroken (super.lhc.override { QuickCheck = self.QuickCheck_1_2_0_1; });
+
+  # Depends on broken test-framework-quickcheck.
+  apiary = dontCheck super.apiary;
+  apiary-authenticate = dontCheck super.apiary-authenticate;
+  apiary-clientsession = dontCheck super.apiary-clientsession;
+  apiary-cookie = dontCheck super.apiary-cookie;
+  apiary-eventsource = dontCheck super.apiary-eventsource;
+  apiary-logger = dontCheck super.apiary-logger;
+  apiary-memcached = dontCheck super.apiary-memcached;
+  apiary-mongoDB = dontCheck super.apiary-mongoDB;
+  apiary-persistent = dontCheck super.apiary-persistent;
+  apiary-purescript = dontCheck super.apiary-purescript;
+  apiary-session = dontCheck super.apiary-session;
+  apiary-websockets = dontCheck super.apiary-websockets;
+
+  # https://github.com/mikeizbicki/hmm/issues/12
+  hmm = markBroken super.hmm;
+
+  # https://github.com/alephcloud/hs-configuration-tools/issues/40
+  configuration-tools = dontCheck super.configuration-tools;
+
+  # https://github.com/fumieval/karakuri/issues/1
+  karakuri = markBroken super.karakuri;
+
+  # Upstream notified by e-mail.
+  snowglobe = markBroken super.snowglobe;
+  gearbox = markBroken super.gearbox;
+
+  # https://github.com/deech/fltkhs/issues/7
+  fltkhs = markBroken super.fltkhs;
+
+  # Build fails, but there seems to be no issue tracker available. :-(
+  hmidi = markBrokenVersion "0.2.1.0" super.hmidi;
+  padKONTROL = markBroken super.padKONTROL;
+
+  # https://github.com/lambdabot/lambdabot/issues/105
+  lambdabot-core = markBroken super.lambdabot-core;
+  lambdabot-haskell-plugins = markBroken super.lambdabot-haskell-plugins;
+  lambdabot-irc-plugins = markBroken super.lambdabot-irc-plugins;
+  lambdabot-misc-plugins = markBroken super.lambdabot-misc-plugins;
+  lambdabot-novelty-plugins = markBroken super.lambdabot-novelty-plugins;
+  lambdabot-reference-plugins = markBroken super.lambdabot-reference-plugins;
+  lambdabot-social-plugins = markBroken super.lambdabot-social-plugins;
+
+  # Upstream provides no issue tracker and no contact details.
+  vivid = markBroken super.vivid;
+
+  # Test suite wants to connect to $DISPLAY.
+  hsqml = dontCheck super.hsqml;
+
+  # https://github.com/megantti/rtorrent-rpc/issues/1
+  rtorrent-rpc = markBroken super.rtorrent-rpc;
+
+  # https://github.com/PaulJohnson/geodetics/issues/1
+  geodetics = dontCheck super.geodetics;
+
+  # https://github.com/AndrewRademacher/aeson-casing/issues/1
+  aeson-casing = dontCheck super.aeson-casing;
+
+  # https://github.com/junjihashimoto/test-sandbox-compose/issues/2
+  test-sandbox-compose = dontCheck super.test-sandbox-compose;
+
+  # Broken by GLUT update.
+  Monadius = markBroken super.Monadius;
+
+  # https://github.com/maoe/influxdb-haskell/issues/24
+  influxdb = markBroken super.influxdb;
+  snaplet-influxdb = markBroken super.snaplet-influxdb;
+
+  # We don't have the groonga package these libraries bind to.
+  haroonga = markBroken super.haroonga;
+  haroonga-httpd = markBroken super.haroonga-httpd;
+
+  # Cannot find pkg-config data for "webkit-1.0".
+  webkit = markBroken super.webkit;
+  websnap = markBroken super.websnap;
+
+  # https://github.com/victoredwardocallaghan/hlibBladeRF/issues/4
+  hlibBladeRF = dontCheck super.hlibBladeRF;
+
+  # https://github.com/frasertweedale/hs-persona-idp/issues/1
+  persona-idp = markBroken super.persona-idp;
+
+  # Build is broken and no contact info available.
+  hopenpgp-tools = markBroken super.hopenpgp-tools;
 
 } // {
 

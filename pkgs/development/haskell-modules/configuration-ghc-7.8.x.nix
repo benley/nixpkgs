@@ -37,6 +37,9 @@ self: super: {
   # mtl 2.2.x needs the latest transformers.
   mtl_2_2_1 = super.mtl_2_2_1.override { transformers = self.transformers_0_4_2_0; };
 
+  # Configure build for mtl 2.1.x.
+  mtl-compat = addBuildDepend (enableCabalFlag super.mtl-compat "two-point-one") self.transformers-compat;
+
   # Idris requires mtl 2.2.x.
   idris = overrideCabal (super.idris.overrideScope (self: super: {
     mkDerivation = drv: super.mkDerivation (drv // { doCheck = false; });
@@ -59,7 +62,7 @@ self: super: {
   imports = super.imports.override { mtl = self.mtl_2_2_1; };
 
   # Newer versions require mtl 2.2.x.
-  mtl-prelude = self.mtl-prelude_1_0_2;
+  mtl-prelude = self.mtl-prelude_1_0_3;
 
   # The test suite pulls in mtl 2.2.x
   command-qq = dontCheck super.command-qq;
@@ -71,8 +74,29 @@ self: super: {
   seqid = super.seqid_0_1_0;
   seqid-streams = super.seqid-streams_0_1_0;
 
-  # https://github.com/ivan-m/monad-levels/issues/1
-  monad-levels = dontDistribute super.monad-levels;
+  # Need binary >= 0.7.2, but our compiler has only 0.7.1.0.
+  hosc = dontDistribute super.hosc;
+  tidal-midi = dontDistribute super.tidal-midi;
+
+  # These packages need mtl 2.2.x directly or indirectly via dependencies.
+  apiary-purescript = markBroken super.apiary-purescript;
+  clac = dontDistribute super.clac;
+  highlighter2 = markBroken super.highlighter2;
+  hypher = markBroken super.hypher;
+  miniforth = markBroken super.miniforth;
+  purescript = markBroken super.purescript;
+  xhb-atom-cache = markBroken super.xhb-atom-cache;
+  xhb-ewmh = markBroken super.xhb-ewmh;
+  yesod-purescript = markBroken super.yesod-purescript;
+  yabi-muno = markBroken super.yabi-muno;
+  yet-another-logger = markBroken super.yet-another-logger;
+
+  # https://github.com/frosch03/arrowVHDL/issues/2
+  ArrowVHDL = markBroken super.ArrowVHDL;
+
+  # https://ghc.haskell.org/trac/ghc/ticket/9625
+  wai-middleware-preprocessor = dontCheck super.wai-middleware-preprocessor;
+  incremental-computing = dontCheck super.incremental-computing;
 
 }
 
@@ -102,14 +126,17 @@ self: super: {
     time = self.time_1_5_0_1;
     unix = self.unix_2_7_1_0;
     directory = self.directory_1_2_1_0;
-    process = overrideCabal self.process_1_2_1_0 (drv: { coreSetup = true; });
-    inherit amazonka-core amazonkaEnv amazonka amazonka-cloudwatch;
+    process = overrideCabal self.process_1_2_2_0 (drv: { coreSetup = true; });
+    inherit amazonka-core amazonkaEnv amazonka amazonka-cloudwatch amazonka-glacier amazonka-ecs;
   };
   amazonka = super.amazonka.overrideScope amazonkaEnv;
   amazonka-cloudwatch = super.amazonka-cloudwatch.overrideScope amazonkaEnv;
   amazonka-core = super.amazonka-core.overrideScope amazonkaEnv;
+  amazonka-ecs = super.amazonka-ecs.overrideScope amazonkaEnv;
+  amazonka-glacier = super.amazonka-glacier.overrideScope amazonkaEnv;
   amazonka-kms = super.amazonka-kms.overrideScope amazonkaEnv;
+  amazonka-ssm = super.amazonka-ssm.overrideScope amazonkaEnv;
 in {
   inherit amazonkaEnv;
-  inherit amazonka amazonka-cloudwatch amazonka-core amazonka-kms;
+  inherit amazonka amazonka-cloudwatch amazonka-core amazonka-ecs amazonka-kms amazonka-glacier amazonka-ssm;
 })

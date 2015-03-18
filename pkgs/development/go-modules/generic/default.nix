@@ -8,7 +8,7 @@
 , meta ? {}, ... } @ args:
 
 go.stdenv.mkDerivation ( args // {
-  name = "${go.name}-${name}";
+  name = "go${go.meta.branch}-${name}";
   buildInputs = [ go ] ++ buildInputs;
 
   configurePhase = args.configurePhase or ''
@@ -27,16 +27,16 @@ go.stdenv.mkDerivation ( args // {
     runHook preBuild
 
     if [ -n "$subPackages" ] ; then
-        for p in $subPackages ; do
+	for p in $subPackages ; do
             go install $buildFlags "''${buildFlagsArray[@]}" -p $NIX_BUILD_CORES -v $goPackagePath/$p
-        done
+	done
     else
-        find . -type d | while read d; do
+	find . -type d | while read d; do
             for i in $d/*.go; do
                 go install $buildFlags "''${buildFlagsArray[@]}" -p $NIX_BUILD_CORES -v $d
                 break
-            done
-        done
+	    done
+	done
     fi
 
     runHook postBuild
@@ -46,16 +46,16 @@ go.stdenv.mkDerivation ( args // {
     runHook preCheck
 
     if [ -n "$subPackages" ] ; then
-        for p in $subPackages ; do
+	for p in $subPackages ; do
             go test -p $NIX_BUILD_CORES -v $goPackagePath/$p
-        done
+	done
     else
-        find . -type d | while read d; do
+	find . -type d | while read d; do
             for i in $d/*_test.go; do
                 go test -p $NIX_BUILD_CORES -v $d
                 break
-            done
-        done
+	    done
+	done
     fi
 
     runHook postCheck

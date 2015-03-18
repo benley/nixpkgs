@@ -24,10 +24,15 @@ let
                 pkgs.sudo
                 pkgs.docbook5
                 pkgs.docbook5_xsl
-                pkgs.grub
-                pkgs.perlPackages.XMLLibXML
                 pkgs.unionfs-fuse
+
+                # Bootloader support
+                pkgs.grub
+                pkgs.grub2
+                pkgs.grub2_efi
                 pkgs.gummiboot
+                pkgs.perlPackages.XMLLibXML
+                pkgs.perlPackages.ListCompare
               ];
 
             # Don't use https://cache.nixos.org since the fake

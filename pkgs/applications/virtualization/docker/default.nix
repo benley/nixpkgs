@@ -1,24 +1,24 @@
-{ stdenv, fetchurl, makeWrapper, go, lxc, sqlite, iproute, bridge_utils, devicemapper,
+{ stdenv, fetchurl, makeWrapper, go, lxc, sqlite, iproute, bridge-utils, devicemapper,
 btrfsProgs, iptables, bash, e2fsprogs, xz}:
 
 stdenv.mkDerivation rec {
   name = "docker-${version}";
-  version = "1.4.1";
+  version = "1.5.0";
 
   src = fetchurl {
     url = "https://github.com/dotcloud/docker/archive/v${version}.tar.gz";
-    sha256 = "0d98c7dfzv1gj5ssbyln4pbkbml6rrmy22v5v4ricbsx9qhhwc1l";
+    sha256 = "0j1wlh0jj84ly3iykp2iqvm01g5il5v56fvlrfvx6qsslyrs35yg";
   };
 
-  buildInputs = [ makeWrapper go sqlite lxc iproute bridge_utils devicemapper btrfsProgs iptables e2fsprogs];
+  buildInputs = [ makeWrapper go sqlite lxc iproute bridge-utils devicemapper btrfsProgs iptables e2fsprogs ];
 
   dontStrip = true;
 
   buildPhase = ''
-    patchShebangs ./hack
+    patchShebangs ./project
     export AUTO_GOPATH=1
     export DOCKER_GITCOMMIT="c78088f"
-    ./hack/make.sh dynbinary
+    ./project/make.sh dynbinary
   '';
 
   installPhase = ''

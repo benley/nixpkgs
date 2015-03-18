@@ -3,30 +3,34 @@
 with stdenv.lib;
 
 ''
-  # Power management and debugging.
+  # Debugging.
   DEBUG_KERNEL y
-  PM_ADVANCED_DEBUG y
-  ${optionalString (versionOlder version "3.19") ''
-    PM_RUNTIME y
-  ''}
-  ${optionalString (versionAtLeast version "3.10") ''
-    X86_INTEL_PSTATE y
-  ''}
   TIMER_STATS y
-  ${optionalString (versionOlder version "3.10") ''
-    USB_SUSPEND y
-  ''}
   BACKTRACE_SELF_TEST n
   CPU_NOTIFIER_ERROR_INJECT? n
   DEBUG_DEVRES n
   DEBUG_NX_TEST n
   DEBUG_STACK_USAGE n
-  ${optionalString (!(features.grsecurity or true)) ''
+  ${optionalString (!(features.grsecurity or false)) ''
     DEBUG_STACKOVERFLOW n
   ''}
   RCU_TORTURE_TEST n
   SCHEDSTATS n
   DETECT_HUNG_TASK y
+
+  # Power management.
+  ${optionalString (versionOlder version "3.19") ''
+    PM_RUNTIME y
+  ''}
+  PM_ADVANCED_DEBUG y
+  ${optionalString (versionAtLeast version "3.10") ''
+    X86_INTEL_PSTATE y
+  ''}
+  INTEL_IDLE y
+  CPU_FREQ_DEFAULT_GOV_PERFORMANCE y
+  ${optionalString (versionOlder version "3.10") ''
+    USB_SUSPEND y
+  ''}
 
   # Support drivers that need external firmware.
   STANDALONE n
@@ -49,7 +53,6 @@ with stdenv.lib;
   NUMA? y
 
   # Disable some expensive (?) features.
-  FTRACE n
   KPROBES n
   PM_TRACE_RTC n
 
@@ -148,10 +151,13 @@ with stdenv.lib;
 
   # Filesystem options - in particular, enable extended attributes and
   # ACLs for all filesystems that support them.
+  FANOTIFY y
   EXT2_FS_XATTR y
   EXT2_FS_POSIX_ACL y
   EXT2_FS_SECURITY y
-  EXT2_FS_XIP y # Ext2 execute in place support
+  ${optionalString (versionOlder version "4.0") ''
+    EXT2_FS_XIP y # Ext2 execute in place support
+  ''}
   EXT3_FS_POSIX_ACL y
   EXT3_FS_SECURITY y
   EXT4_FS_POSIX_ACL y
@@ -319,6 +325,26 @@ with stdenv.lib;
   ''}
   XEN? y
   XEN_DOM0? y
+  ${optionalString ((versionAtLeast version "3.18") && (features.xen_dom0 or false))  ''
+    PCI_XEN? y
+    HVC_XEN? y
+    HVC_XEN_FRONTEND? y
+    XEN_SYS_HYPERVISOR? y
+    SWIOTLB_XEN? y
+    XEN_BACKEND? y
+    XEN_BALLOON? y
+    XEN_BALLOON_MEMORY_HOTPLUG? y
+    XEN_EFI? y
+    XEN_HAVE_PVMMU? y
+    XEN_MCE_LOG? y
+    XEN_PVH? y
+    XEN_PVHVM? y
+    XEN_SAVE_RESTORE? y
+    XEN_SCRUB_PAGES? y
+    XEN_SELFBALLOONING? y
+    XEN_STUB? y
+    XEN_TMEM? y
+  ''}
   KSM y
   ${optionalString (!stdenv.is64bit) ''
     HIGHMEM64G? y # We need 64 GB (PAE) support for Xen guest support.

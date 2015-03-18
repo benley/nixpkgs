@@ -1,32 +1,30 @@
 { stdenv, fetchurl, ncurses, openssl, perl, python, aspell, gnutls
 , zlib, curl , pkgconfig, libgcrypt, ruby, lua5, tcl, guile
-, pythonPackages, cacert, cmake, makeWrapper }:
+, pythonPackages, cacert, cmake, makeWrapper
+, extraBuildInputs ? [] }:
 
 stdenv.mkDerivation rec {
-  version = "1.1.0";
+  version = "1.1.1";
   name = "weechat-${version}";
 
   src = fetchurl {
-    url = "http://weechat.org/files/src/weechat-1.1.tar.gz";
-    sha256 = "1hzrnqafgnkmp9ddld3f8gn2378lb3x3pmd8pp2lgh9pf2q7iww3";
+    url = "http://weechat.org/files/src/weechat-${version}.tar.gz";
+    sha256 = "0j8kc2zsv7ybgq6wi0r8siyd3adl3528gymgmidijd78smbpwbx3";
   };
 
   buildInputs = 
     [ ncurses perl python openssl aspell gnutls zlib curl pkgconfig
       libgcrypt ruby lua5 tcl guile pythonPackages.pycrypto makeWrapper
       cacert cmake ]
-    ++ stdenv.lib.optional stdenv.isDarwin pythonPackages.pync;
+    ++ extraBuildInputs;
 
-  NIX_CFLAGS_COMPILE = "-I${python}/include/${python.libPrefix}";
+  NIX_CFLAGS_COMPILE = "-I${python}/include/${python.libPrefix} -DCA_FILE=${cacert}/etc/ca-bundle.crt";
 
   postInstall = ''
     NIX_PYTHONPATH="$out/lib/${python.libPrefix}/site-packages"
-  '' + stdenv.lib.optionalString stdenv.isDarwin ''
-    NIX_PYTHONPATH+="${pythonPackages.pync}/lib/${python.libPrefix}/site-packages"
-  '' + ''
-     wrapProgram "$out/bin/weechat" \
-       --prefix PYTHONPATH : "$PYTHONPATH" \
-       --prefix PYTHONPATH : "$NIX_PYTHONPATH"
+    wrapProgram "$out/bin/weechat" \
+      --prefix PYTHONPATH : "$PYTHONPATH" \
+      --prefix PYTHONPATH : "$NIX_PYTHONPATH"
   '';
 
   meta = {
