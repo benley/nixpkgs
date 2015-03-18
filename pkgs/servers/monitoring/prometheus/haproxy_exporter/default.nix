@@ -1,23 +1,17 @@
-{ stdenv, lib, fetchFromGitHub, fetchhg, go }:
+{ stdenv, lib, goPackages, fetchFromGitHub, }:
 
-stdenv.mkDerivation rec {
+goPackages.buildGoPackage rec {
   name = "prometheus-haproxy-exporter-0.4.0";
+  goPackagePath = "github.com/prometheus/haproxy_exporter";
 
-  src = import ./deps.nix {
-    inherit stdenv lib fetchFromGitHub fetchhg;
+  src = fetchFromGitHub {
+    owner = "prometheus";
+    repo = "haproxy_exporter";
+    rev = "6ee6d1df3e68ed73df37c9794332b2594e4da45d";
+    sha256 = "0lbwv6jsdfjd9ihiky3lq7d5rkxqjh7xfaziw8i3w34a38japlpr";
   };
 
-  buildInputs = [ go ];
-
-  buildPhase = ''
-    export GOPATH=$src
-    go build github.com/prometheus/haproxy_exporter
-  '';
-
-  installPhase = ''
-    mkdir -p $out/bin
-    cp haproxy_exporter $out/bin/
-  '';
+  buildInputs = [ goPackages.prometheus.client_golang ];
 
   meta = with lib; {
     description = "HAProxy Exporter for the Prometheus monitoring system";

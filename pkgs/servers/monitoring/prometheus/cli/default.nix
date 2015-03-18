@@ -1,22 +1,19 @@
-{ stdenv, lib, fetchFromGitHub, fetchhg, go }:
+{ stdenv, lib, goPackages, fetchFromGitHub }:
 
-stdenv.mkDerivation rec {
+goPackages.buildGoPackage rec {
   name = "prometheus-cli-0.2.0";
-  src = import ./deps.nix {
-    inherit stdenv lib fetchFromGitHub fetchhg;
+  goPackagePath = "github.com/prometheus/prometheus_cli";
+  src = fetchFromGitHub {
+    owner = "prometheus";
+    repo = "prometheus_cli";
+    rev = "b36c21d2301cf686bff81953573a29a6d5a0a883";
+    sha256 = "190dlc6fyrfgxab4xj3gaz4jwx33jhzg57d8h36xjx56gbvp7iyk";
   };
 
-  buildInputs = [ go ];
-
-  buildPhase = ''
-    export GOPATH=$src
-    go build github.com/prometheus/prometheus_cli
-  '';
-
-  installPhase = ''
-    mkdir -p $out/bin
-    cp prometheus_cli $out/bin/
-  '';
+  buildInputs = [
+    goPackages.prometheus.client_model
+    goPackages.prometheus.client_golang
+  ];
 
   meta = with lib; {
     description = "Command line tool for querying the Prometheus HTTP API";
