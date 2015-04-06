@@ -6174,6 +6174,8 @@ let
 
   libdwarf = callPackage ../development/libraries/libdwarf { };
 
+  libdxfrw = callPackage ../development/libraries/libdxfrw { };
+
   libeatmydata = callPackage ../development/libraries/libeatmydata { };
 
   libebml = callPackage ../development/libraries/libebml { };
@@ -6348,6 +6350,9 @@ let
   libQGLViewer = callPackage ../development/libraries/libqglviewer { };
 
   libre = callPackage ../development/libraries/libre {};
+
+  libredwg = callPackage ../development/libraries/libredwg { };
+
   librem = callPackage ../development/libraries/librem {};
 
   libresample = callPackage ../development/libraries/libresample {};
