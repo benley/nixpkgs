@@ -1,7 +1,7 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
 with utils;
+with lib;
 with import ./systemd-unit-options.nix { inherit config lib; };
 
 let
@@ -13,7 +13,7 @@ let
 
   makeUnit = name: unit:
     let
-      pathSafeName = lib.replaceChars ["@" "\\"] ["-" "-"] name;
+      pathSafeName = lib.replaceChars ["@" ":" "\\"] ["-" "-" "-"] name;
     in
     if unit.enable then
       pkgs.runCommand "unit-${pathSafeName}" { preferLocalBuild = true; inherit (unit) text; }

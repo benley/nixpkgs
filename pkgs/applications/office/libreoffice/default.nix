@@ -24,8 +24,8 @@ let
   langsSpaces = stdenv.lib.concatStringsSep " " langs;
   major = "4";
   minor = "4";
-  patch = "0";
-  tweak = "3";
+  patch = "2";
+  tweak = "2";
   subdir = "${major}.${minor}.${patch}";
   version = "${subdir}${if tweak == "" then "" else "."}${tweak}";
 
@@ -61,7 +61,7 @@ let
       ("Error: update liborcus version inside LO expression")
       (import ./libreoffice-srcs.nix));
 
-    buildInputs = [ boost mdds pkgconfig zlib libixion ];
+    buildInputs = [ boost mdds pkgconfig zlib /*libixion*/ ];
 
     configureFlags = [ "--with-boost=${boost.dev}" ];
   };
@@ -80,14 +80,14 @@ let
 
     translations = fetchSrc {
       name = "translations";
-      sha256 = "0y94sry2cghc82628smka7qb1xqlgrgvy98bxd2fpqfkd1llcqfg";
+      sha256 = "0m1a09vzgh5mz0dgx2ji3fwmsqr7xymr0hhrrhf75nd1dr0blv2s";
     };
 
     # TODO: dictionaries
 
     help = fetchSrc {
       name = "help";
-      sha256 = "05al25vcz2z6fhm8vx77wa47nyi3r0hwll6mg2aclx7yp0s5k01d";
+      sha256 = "06i2c143dpqm4w1a9nba0gn1ayrvrhdrcm2kydzapvljgljqswkh";
     };
 
   };
@@ -97,7 +97,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "http://download.documentfoundation.org/libreoffice/src/${subdir}/libreoffice-${version}.tar.xz";
-    sha256 = "1xqc60ckay6xpljipcbm4915qqwk81dm2fbpxwfqc2l4gv9g6s6i";
+    sha256 = "0dif783zbh9qb4636mm055clwwsv8j6pmb8msi9lr183drnaw73x";
   };
 
   # Openoffice will open libcups dynamically, so we link it directly
@@ -235,6 +235,8 @@ stdenv.mkDerivation rec {
     "--without-system-libpagemaker"
     "--without-system-coinmp"
     "--without-system-libgltf"
+
+    "--without-system-orcus"
   ];
 
   checkPhase = ''
@@ -253,10 +255,10 @@ stdenv.mkDerivation rec {
       gst_all_1.gst-plugins-base
       neon nspr nss openldap openssl ORBit2 pam perl pkgconfigUpstream poppler
       python3 sablotron saneBackends tcsh unzip vigra which zip zlib
-      mdds bluez5 glibc libixion
+      mdds bluez5 glibc /*libixion*/
       libxshmfence libatomic_ops graphite2 harfbuzz
       librevenge libe-book libmwaw glm glew
-      liborcus libodfgen
+      /*liborcus*/ libodfgen
     ];
 
   meta = with stdenv.lib; {

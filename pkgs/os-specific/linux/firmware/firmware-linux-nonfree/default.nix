@@ -1,12 +1,13 @@
 { stdenv, fetchgit }:
 
-stdenv.mkDerivation {
-  name = "firmware-linux-nonfree-2015-02-27";
+stdenv.mkDerivation rec {
+  name = "firmware-linux-nonfree-${version}";
+  version = "2015-03-20";
 
   src = fetchgit {
     url = "git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git";
-    rev = "cef33368c4d3425f11306496f0250f8ef1cf3c1f";
-    sha256 = "0az6b7fbhanqdc9v9dl651yqqnfbm1npdibip196vnmd5qlv2iw4";
+    rev = "f404336ba808cbd57547196e13367079a23b822c";
+    sha256 = "0avz5vxax2b3s4gafib47vih1lbq78agdmpjcjnnnykw2kschkwa";
   };
 
   preInstall = ''
@@ -22,4 +23,6 @@ stdenv.mkDerivation {
     platforms = platforms.linux;
     maintainers = with maintainers; [ wkennington ];
   };
+
+  passthru = { inherit version; };
 }

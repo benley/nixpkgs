@@ -19,6 +19,7 @@ with stdenv.lib; with autonix;
 let
 
   mkDerivation = drv:
+    let inherit (builtins.parseDrvName drv.name) version; in
     stdenv.mkDerivation
       (drv // {
         setupHook = ./setup-hook.sh;
@@ -26,13 +27,10 @@ let
         enableParallelBuilding = drv.enableParallelBuilding or true;
         cmakeFlags =
           (drv.cmakeFlags or [])
-          ++ [ "-DBUILD_TESTING=OFF"
-            "-DKDE_DEFAULT_HOME=.kde5"
-            "-DKDE4_DEFAULT_HOME=.kde"
-          ]
+          ++ [ "-DBUILD_TESTING=OFF" ]
           ++ optional debug "-DCMAKE_BUILD_TYPE=Debug";
 
-        meta = drv.meta or
+        meta =
           {
             license = with stdenv.lib.licenses; [
               lgpl21Plus lgpl3Plus bsd2 mit gpl2Plus gpl3Plus fdl12
@@ -40,7 +38,9 @@ let
             platforms = stdenv.lib.platforms.linux;
             maintainers = with stdenv.lib.maintainers; [ ttuegel ];
             homepage = "http://www.kde.org";
-          };
+            inherit version;
+            branch = intersperse "." (take 2 (splitString "." version));
+          } // (drv.meta or {});
       });
 
   renames = builtins.removeAttrs (import ./renames.nix {}) ["Backend" "CTest"];
@@ -56,8 +56,8 @@ let
       Qt5DBus = qt5.base;
       Qt5Gui = qt5.base;
       Qt5LinguistTools = qt5.tools;
-      Qt5Qml = qt5.declarative;
-      Qt5Quick = qt5.quickcontrols;
+      Qt5Qml = [qt5.declarative qt5.graphicaleffects];
+      Qt5Quick = [qt5.quickcontrols qt5.graphicaleffects];
       Qt5Script = qt5.script;
       Qt5Svg = qt5.svg;
       Qt5WebkitWidgets = qt5.webkit;
@@ -69,8 +69,9 @@ let
     # packages from the nixpkgs collection
     (with pkgs;
       {
-        inherit cmake epoxy;
         Boost = boost155;
+        cmake = cmake-3_2;
+        inherit epoxy;
         GIF = giflib;
         GLIB2 = glib;
         Gpgme = gpgme;
@@ -102,18 +103,22 @@ let
       extra-cmake-modules = {
         inherit (super.extra-cmake-modules) name src;
 
-        propagatedNativeBuildInputs = [ pkgs.cmake pkgs.pkgconfig qt5.tools ];
+        propagatedNativeBuildInputs = [ scope.cmake pkgs.pkgconfig qt5.tools ];
         cmakeFlags = ["-DBUILD_TESTING=OFF"];
         patches =
           [
             ./extra-cmake-modules/0001-extra-cmake-modules-paths.patch
           ];
-        meta = {
-          license = with stdenv.lib.licenses; [ bsd2 ];
-          platforms = stdenv.lib.platforms.linux;
-          maintainers = with stdenv.lib.maintainers; [ ttuegel ];
-          homepage = "http://www.kde.org";
-        };
+        meta =
+          let inherit (builtins.parseDrvName super.extra-cmake-modules.name) version; in
+          {
+            license = with stdenv.lib.licenses; [ bsd2 ];
+            platforms = stdenv.lib.platforms.linux;
+            maintainers = with stdenv.lib.maintainers; [ ttuegel ];
+            homepage = "http://www.kde.org";
+            inherit version;
+            branch = intersperse "." (take 2 (splitString "." version));
+          };
       };
 
       frameworkintegration = super.frameworkintegration // {

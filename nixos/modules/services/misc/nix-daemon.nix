@@ -20,6 +20,8 @@ let
       extraGroups = [ "nixbld" ];
     };
 
+  nixbldUsers = map makeNixBuildUser (range 1 cfg.nrBuildUsers);
+
   nixConf =
     let
       # If we're using a chroot for builds, then provide /bin/sh in
@@ -357,7 +359,9 @@ in
 
     nix.nrBuildUsers = mkDefault (lib.max 10 cfg.maxJobs);
 
-    users.extraUsers = map makeNixBuildUser (range 1 cfg.nrBuildUsers);
+    users.extraUsers = nixbldUsers;
+
+    services.xserver.displayManager.hiddenUsers = map ({ name, ... }: name) nixbldUsers;
 
     system.activationScripts.nix = stringAfter [ "etc" "users" ]
       ''
@@ -375,9 +379,6 @@ in
           /nix/var/nix/gcroots/per-user \
           /nix/var/nix/profiles/per-user \
           /nix/var/nix/gcroots/tmp
-
-        ln -sf /nix/var/nix/profiles /nix/var/nix/gcroots/
-        ln -sf /nix/var/nix/manifests /nix/var/nix/gcroots/
       '';
 
   };

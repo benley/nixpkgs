@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   name    = "sbcl-${version}";
-  version = "1.2.8";
+  version = "1.2.10";
 
   src = fetchurl {
     url    = "mirror://sourceforge/project/sbcl/sbcl/${version}/${name}-source.tar.bz2";
-    sha256 = "0ab9lw056yf6y0rjmx3iirn5n59pmssqxf00fbmpyl6qsnpaja1d";
+    sha256 = "11gn25knjk0zdyi3s6w0blcnrxjgyj4iifg5h07pv2r7hm83s92m";
   };
 
   buildInputs = [ which ]

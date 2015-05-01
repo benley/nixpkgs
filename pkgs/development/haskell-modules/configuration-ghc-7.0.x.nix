@@ -4,6 +4,9 @@ with import ./lib.nix { inherit pkgs; };
 
 self: super: {
 
+  # Suitable LLVM version.
+  llvmPackages = pkgs.llvmPackages_34;
+
   # Disable GHC 7.0.x core libraries.
   array = null;
   base = null;
@@ -35,10 +38,10 @@ self: super: {
   binary = self.binary_0_7_4_0;
 
   # deepseq is not a core library for this compiler.
-  deepseq = self.deepseq_1_4_0_0;
+  deepseq = self.deepseq_1_4_1_1;
 
   # transformers is not a core library for this compiler.
-  transformers = self.transformers_0_4_2_0;
+  transformers = self.transformers_0_4_3_0;
   mtl = self.mtl_2_2_1;
   transformers-compat = disableCabalFlag super.transformers-compat "three";
 

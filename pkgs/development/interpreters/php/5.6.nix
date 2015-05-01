@@ -90,13 +90,13 @@ composableDerivation.composableDerivation {} ( fixed : let inherit (fixed.fixed)
       };
 
       mysql = {
-        configureFlags = ["--with-mysql=${mysql}"];
-        buildInputs = [ mysql ];
+        configureFlags = ["--with-mysql=${mysql.lib}"];
+        buildInputs = [ mysql.lib ];
       };
 
       mysqli = {
-        configureFlags = ["--with-mysqli=${mysql}/bin/mysql_config"];
-        buildInputs = [ mysql];
+        configureFlags = ["--with-mysqli=${mysql.lib}/bin/mysql_config"];
+        buildInputs = [ mysql.lib ];
       };
 
       mysqli_embedded = {
@@ -106,8 +106,8 @@ composableDerivation.composableDerivation {} ( fixed : let inherit (fixed.fixed)
       };
 
       pdo_mysql = {
-        configureFlags = ["--with-pdo-mysql=${mysql}"];
-        buildInputs = [ mysql ];
+        configureFlags = ["--with-pdo-mysql=${mysql.lib}"];
+        buildInputs = [ mysql.lib ];
       };
 
       bcmath = {
@@ -193,6 +193,11 @@ composableDerivation.composableDerivation {} ( fixed : let inherit (fixed.fixed)
         buildInputs = [freetds];
       };
 
+
+      calendar = {
+        configureFlags = ["--enable-calendar"];
+      };
+
     };
 
   cfg = {
@@ -227,6 +232,7 @@ composableDerivation.composableDerivation {} ( fixed : let inherit (fixed.fixed)
     fpmSupport = config.php.fpm or true;
     gmpSupport = config.php.gmp or true;
     mssqlSupport = config.php.mssql or (!stdenv.isDarwin);
+    calendarSupport = config.php.calendar or true;
   };
 
   configurePhase = ''
@@ -254,12 +260,13 @@ composableDerivation.composableDerivation {} ( fixed : let inherit (fixed.fixed)
     sha256 = "0vfhvwn84lrz9psf10sjnwljbna1r7yqxq3lmsh5qajifl3lraxd";
   };
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "An HTML-embedded scripting language";
     homepage = http://www.php.net/;
     license = stdenv.lib.licenses.php301;
+    maintainers = with maintainers; [ globin ];
   };
 
-  patches = [ ./fix-5.4.patch ];
+  patches = [ ./fix-paths.patch ];
 
 })

@@ -17,20 +17,6 @@ mounts = [ ['/nix/store', nil],
 mkdirs = ['tmp',
          ]
 
-# Symlinks: [from, to (dir)]
-symlinks =
-  # /etc symlinks: [file name, prefix in host-etc]
-  [ ['passwd', ''],
-    ['group', ''],
-    ['shadow', ''],
-    ['hosts', ''],
-    ['resolv.conf', ''],
-    ['nsswitch.conf', ''],
-    ['pam.d', 'static'],
-    ['fonts/fonts.conf', 'static'],
-    ['fonts/conf.d/00-nixos.conf', 'static'],
-  ].map! { |x| [ "host-etc/#{x[1]}/#{x[0]}", "etc/#{File.dirname x[0]}" ] }
-
 require 'tmpdir'
 require 'fileutils'
 require 'pathname'
@@ -93,7 +79,11 @@ if $cpid == 0
   $unshare.call CLONE_NEWNS | CLONE_NEWUSER
 
   # Map users and groups to the parent namespace
-  write_file '/proc/self/setgroups', 'deny'
+  begin
+    # setgroups is only available since Linux 3.19
+    write_file '/proc/self/setgroups', 'deny'
+  rescue
+  end
   write_file '/proc/self/uid_map', "#{uid} #{uid} 1"
   write_file '/proc/self/gid_map', "#{gid} #{gid} 1"
 
@@ -110,12 +100,6 @@ if $cpid == 0
   # Chroot!
   Dir.chroot root
   Dir.chdir '/'
-
-  # Do symlinks
-  symlinks.each do |x|
-    FileUtils.mkdir_p x[1]
-    FileUtils.ln_s x[0], x[1]
-  end
 
   # Symlink swdir hierarchy
   mount_dirs = Set.new mounts.map { |x| Pathname.new x[1] }
@@ -136,13 +120,11 @@ if $cpid == 0
   link_swdir.call swdir, Pathname.new('')
 
   # New environment
-  oldenv = ENV.to_h
-  ENV.replace({ 'PS1' => oldenv['PS1'],
-                'TERM' => oldenv['TERM'],
-                'DISPLAY' => oldenv['DISPLAY'],
-                'HOME' => oldenv['HOME'],
-                'PATH' => '/bin:/sbin',
-                'XDG_RUNTIME_DIR' => oldenv['XDG_RUNTIME_DIR'],
+  ENV.replace({ 'TERM' => ENV['TERM'],
+                'DISPLAY' => ENV['DISPLAY'],
+                'HOME' => ENV['HOME'],
+                'XDG_RUNTIME_DIR' => ENV['XDG_RUNTIME_DIR'],
+                'LANG' => ENV['LANG'],
               })
 
   # Finally, exec!
