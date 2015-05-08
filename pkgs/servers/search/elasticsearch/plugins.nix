@@ -71,6 +71,22 @@ in {
     };
   };
 
+  elasticsearch_hq = esPlugin rec {
+    name = "elasticsearch-hq-${version}";
+    pluginName = "elasticsearch-HQ";
+    version = "0.99.1";
+    src = fetchurl {
+      url = https://github.com/royrusso/elasticsearch-hq/archive/master.zip;
+      sha256 = "1pws9drff0c7wzhjc5hn7rnmkfa98w0cs0iakc7nad081v7bxhm4";
+    };
+    meta = {
+      description = "Sleek, intuitive, and powerful ElasticSearch Management and Monitoring.";
+      homepage = "http://www.elastichq.org/";
+      license = licenses.asl20;
+      maintainers = [ maintainers.benley ];
+    };
+  };
+
   elasticsearch_river_twitter = esPlugin rec {
     name = pname + "-" + version;
     pname = "elasticsearch-river-twitter";
