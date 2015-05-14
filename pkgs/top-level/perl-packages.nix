@@ -6727,7 +6727,7 @@ let self = _self // overrides; _self = with self; {
       sha256 = "0s0albdw0zvg3w37s7is7gddr4mqwicjxxsy400n1p96l7ipnw4x";
     };
     meta = {
-      description = "Mozilla's ldap client library.";
+      description = "Mozilla's ldap client library";
       license = "unknown";
     };
   };
@@ -7344,6 +7344,21 @@ let self = _self // overrides; _self = with self; {
       homepage = https://github.com/Perl-Toolchain-Gang/Parse-CPAN-Meta;
       description = "Parse META.yml and META.json CPAN metadata files";
       license = with stdenv.lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  ParseDebControl = buildPerlPackage rec {
+    name = "Parse-DebControl-2.005";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/J/JA/JAYBONCI/${name}.tar.gz";
+      sha256 = "0ad78qri4sg9agghqdm83xsjgks94yvffs23kppy7mqjy8gwwjxn";
+    };
+    buildInputs = [ TestPod LWPUserAgent ];
+    propagatedBuildInputs = [ IOStringy ];
+    meta = with stdenv.lib; {
+      homepage = http://search.cpan.org/~jaybonci/Parse-DebControl;
+      license = with licenses; [ artistic1 gpl1Plus ];
+      maintainers = with maintainers; [ nckx ];
     };
   };
 

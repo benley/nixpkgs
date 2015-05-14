@@ -439,6 +439,50 @@ rec {
     };
   };
 
+  vim-buffergator = buildVimPlugin {
+    name = "vim-buffergator-2015-03-31";
+    src = fetchFromGitHub {
+      owner = "jeetsukumaran";
+      repo = "vim-buffergator";
+      rev = "77cfdd127f";
+      sha256 = "11r9845kplwahf2d41whs2lg3bzy0dahs0mvmdbckp7ckq3gd3y4";
+      };
+     meta = with stdenv.lib; {
+      description = "Vim plugin to list, select and switch between buffers";
+      license = licenses.gpl3;
+      maintainers = with maintainers; [ hbunke ];
+     };
+  };
+
+  vim-jinja = buildVimPlugin {
+    name = "vim-jinja-git-2014-06-11";
+    src = fetchFromGitHub {
+      owner = "lepture";
+      repo = "vim-jinja";
+      rev = "4412484b41";
+      sha256="1z5ya953nn7233jjjs0ay61x5hfrfddx9xz31grq52cfd0ipy335";
+    };
+   meta = {
+    homepage = "https://github.com/lepture/vim-jinja";
+    maintainers = [ stdenv.lib.maintainers.hbunke ];
+    };
+  };
+
+  vim-nerdtree-tabs = buildVimPlugin {
+    name = "vim-nerdtree-tabs-2014-09-25";
+    src = fetchFromGitHub {
+      owner = "jistr";
+      repo = "vim-nerdtree-tabs";
+      rev = "0decec122e";
+      sha256 = "0m51vpxq0d3mxy9i18hczsbqsqi7vlzwgjnpryb8gb5wmy999d6l";
+    };
+    meta = with stdenv.lib; {
+      description = "NERDTree and tabs together in Vim, painlessly";
+      license = licenses.asl20;
+      maintainers = with maintainers; [ hbunke ];
+    };
+  };
+
   vimproc = buildVimPlugin {
     name = "vimproc-git-2015-02-23";
     src = fetchgit {
