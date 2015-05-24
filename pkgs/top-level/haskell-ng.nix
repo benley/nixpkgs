@@ -7,10 +7,14 @@ rec {
   compiler = {
 
     ghc6102Binary = callPackage ../development/compilers/ghc/6.10.2-binary.nix { gmp = pkgs.gmp4; };
-    ghc704Binary = callPackage ../development/compilers/ghc/7.0.4-binary.nix ({ gmp = pkgs.gmp4; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghc704Binary = callPackage ../development/compilers/ghc/7.0.4-binary.nix ({
+      gmp = pkgs.gmp4;
+    } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
-    ghc742Binary = callPackage ../development/compilers/ghc/7.4.2-binary.nix ({ gmp = pkgs.gmp4; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghc742Binary = callPackage ../development/compilers/ghc/7.4.2-binary.nix ({
+      gmp = pkgs.gmp4;
+    } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
 

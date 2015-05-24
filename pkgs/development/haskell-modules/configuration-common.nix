@@ -118,6 +118,9 @@ self: super: {
   # Agda-2.4.2.2 needs these overrides to compile.
   Agda = super.Agda.override { equivalence = self.equivalence_0_2_5; cpphs = self.cpphs_1_18_9; };
 
+  # Help libconfig find it's C language counterpart.
+  libconfig = (dontCheck super.libconfig).override { config = pkgs.libconfig; };
+
   # The Haddock phase fails for one reason or another.
   attoparsec-conduit = dontHaddock super.attoparsec-conduit;
   blaze-builder-conduit = dontHaddock super.blaze-builder-conduit;
@@ -349,6 +352,7 @@ self: super: {
   conduit-connection = dontCheck super.conduit-connection;
   craftwerk = dontCheck super.craftwerk;
   damnpacket = dontCheck super.damnpacket;              # http://hydra.cryp.to/build/496923/log
+  data-hash = dontCheck super.data-hash;
   Deadpan-DDP = dontCheck super.Deadpan-DDP;            # http://hydra.cryp.to/build/496418/log/raw
   DigitalOcean = dontCheck super.DigitalOcean;
   directory-layout = dontCheck super.directory-layout;
@@ -513,10 +517,6 @@ self: super: {
   # https://github.com/cgaebel/stm-conduit/issues/33
   stm-conduit = dontCheck super.stm-conduit;
 
-  # https://github.com/fumieval/call/issues/3
-  call = markBrokenVersion "0.1.2" super.call;
-  rhythm-game-tutorial = dontDistribute super.rhythm-game-tutorial;     # depends on call
-
   # The install target tries to run lots of commands as "root". WTF???
   hannahci = markBroken super.hannahci;
 
@@ -661,7 +661,7 @@ self: super: {
   vivid = markBroken super.vivid;
 
   # Test suite wants to connect to $DISPLAY.
-  hsqml = dontCheck super.hsqml;
+  hsqml = dontCheck (super.hsqml.override { qt5 = pkgs.qt53; });
 
   # https://github.com/lookunder/RedmineHs/issues/4
   Redmine = markBroken super.Redmine;
@@ -720,14 +720,8 @@ self: super: {
 
   # https://github.com/fumieval/audiovisual/issues/1
   audiovisual = markBroken super.audiovisual;
-
-  # https://github.com/alephcloud/hs-stm-queue-extras/issues/2
-  stm-queue-extras = overrideCabal super.stm-queue-extras (drv: { editedCabalFile = null; });
-
-  # https://github.com/GaloisInc/cryptol/issues/197
-  cryptol = overrideCabal super.cryptol (drv: {
-    postUnpack = "rm -v ${drv.pname}-${drv.version}/Setup.hs";
-  });
+  call = dontDistribute super.call;
+  rhythm-game-tutorial = dontDistribute super.rhythm-game-tutorial;
 
   # https://github.com/haskell/haddock/issues/378
   haddock-library = dontCheck super.haddock-library;
@@ -786,5 +780,28 @@ self: super: {
 
   # https://github.com/ndmitchell/shake/issues/206
   shake = overrideCabal super.shake (drv: { doCheck = !pkgs.stdenv.isDarwin; });
+
+  # https://github.com/nushio3/doctest-prop/issues/1
+  doctest-prop = dontCheck super.doctest-prop;
+
+  # https://github.com/goldfirere/singletons/issues/116
+  # https://github.com/goldfirere/singletons/issues/117
+  # https://github.com/goldfirere/singletons/issues/118
+  singletons = markBroken super.singletons;
+  singleton-nats = dontDistribute super.singleton-nats;
+  hgeometry = dontDistribute super.hgeometry;
+  hipe = dontDistribute super.hipe;
+  clash-lib = dontDistribute super.clash-lib;
+
+  # https://github.com/anton-k/temporal-music-notation/issues/1
+  temporal-music-notation = markBroken super.temporal-music-notation;
+  temporal-music-notation-demo = dontDistribute super.temporal-music-notation-demo;
+  temporal-music-notation-western = dontDistribute super.temporal-music-notation-western;
+
+  # https://github.com/adamwalker/sdr/issues/1
+  sdr = dontCheck super.sdr;
+
+  # https://github.com/bos/aeson/issues/253
+  aeson = dontCheck super.aeson;
 
 }

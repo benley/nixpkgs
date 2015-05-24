@@ -76,4 +76,13 @@ self: super: {
   # Needs hashable on pre 7.10.x compilers.
   nats = addBuildDepend super.nats self.hashable;
 
+  # Newer versions always trigger the non-deterministic library ID bug
+  # and are virtually impossible to compile on Hydra.
+  conduit = super.conduit_1_2_4_1;
+
+  # https://github.com/magthe/sandi/issues/7
+  sandi = overrideCabal super.sandi (drv: {
+    patchPhase = "sed -i -e 's|base ==4.8.*,|base,|' sandi.cabal"; }
+  );
+
 }
