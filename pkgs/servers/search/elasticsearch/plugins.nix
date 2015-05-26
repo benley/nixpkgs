@@ -81,6 +81,13 @@ in {
       rev = "603ae9ed1b63ad6ffd0f81fb8ebf9f4f820ea360";
       sha256 = "1kn3qhcag8g7083kknav8xpb2na9d95iy28hhrfnm6sc909d5a9b";
     };
+    # fetchFromGitHub unpacks, but we want a zip. Can't use fetchurl because
+    # github sometimes regenrates zips and you'll get a different checksum.
+    preConfigure = ''
+      newsrc=$PWD/HQ.zip
+      (cd $src/../ && ${pkgs.zip}/bin/zip -r $newsrc $(basename $src))
+      src=$newsrc
+    '';
 
     meta = {
       description = "Sleek, intuitive, and powerful ElasticSearch Management and Monitoring.";
