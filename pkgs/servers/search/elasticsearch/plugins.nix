@@ -75,10 +75,13 @@ in {
     name = "elasticsearch-hq-${version}";
     pluginName = "elasticsearch-HQ";
     version = "0.99.1";
-    src = fetchurl {
-      url = https://github.com/royrusso/elasticsearch-hq/archive/master.zip;
-      sha256 = "1pws9drff0c7wzhjc5hn7rnmkfa98w0cs0iakc7nad081v7bxhm4";
+    src = fetchFromGitHub {
+      owner = "royrusso";
+      repo = "elasticsearch-HQ";
+      rev = "603ae9ed1b63ad6ffd0f81fb8ebf9f4f820ea360";
+      sha256 = "1kn3qhcag8g7083kknav8xpb2na9d95iy28hhrfnm6sc909d5a9b";
     };
+
     meta = {
       description = "Sleek, intuitive, and powerful ElasticSearch Management and Monitoring.";
       homepage = "http://www.elastichq.org/";
