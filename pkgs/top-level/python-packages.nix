@@ -750,13 +750,13 @@ let
   }));
 
   azure = buildPythonPackage rec {
-    version = "0.10.2";
+    version = "0.11.0";
     name = "azure-${version}";
     disabled = pythonOlder "2.7";
 
     src = pkgs.fetchurl {
       url = "https://pypi.python.org/packages/source/a/azure/${name}.zip";
-      md5 = "8eaa0f8e649b21b6527a5ee801cef33a";
+      md5 = "5499efd85c54c757c0e757b5407ee47f";
     };
 
     propagatedBuildInputs = with self; [ dateutil futures pyopenssl requests ];
@@ -3532,6 +3532,30 @@ let
     };
   };
 
+  natsort = buildPythonPackage rec {
+    name = "natsort-4.0.0";
+
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/source/n/natsort/${name}.tar.gz";
+      md5 = "38cc0bb27c95bf549fe737d9f267f453";
+    };
+
+    buildInputs = with self;
+      [
+        hypothesis
+        pytestcov
+        pytestflakes
+        pytestpep8
+        covCore
+      ];
+
+    meta = with stdenv.lib; {
+      description = "Natural sorting for python";
+      homepage = https://github.com/SethMMorton/natsort;
+      license = licenses.mit;
+    };
+  };
+
   logster = buildPythonPackage {
     name = "logster-7475c53822";
     src = pkgs.fetchgit {
@@ -3657,6 +3681,46 @@ let
       maintainers = [ maintainers.berdario ];
     };
   };
+
+  pies = buildPythonPackage rec {
+    name = "pies-2.6.5";
+
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/source/p/pies/${name}.tar.gz";
+      md5 = "caba1ce15d312bf68d65a5d2cf9ccff2";
+    };
+
+    deps = if !isPy3k then [ self.pies2overrides self.enum34 ]
+           else if isPy33 then [ self.enum34 ]
+           else [];
+
+    propagatedBuildInputs = deps;
+
+    meta = with stdenv.lib; {
+      description = "The simplest way to write one program that runs on both Python 2 and Python 3";
+      homepage = https://github.com/timothycrosley/pies;
+      license = licenses.mit;
+    };
+  };
+
+  pies2overrides = pythonPackages.buildPythonPackage rec {
+    name = "pies2overrides-2.6.5";
+    disabled = isPy3k;
+
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/source/p/pies2overrides/${name}.tar.gz";
+      md5 = "e73716454a2560341edf99d8f6fe5135";
+    };
+
+    propagatedBuildInputs = with self; [ ipaddress ];
+
+    meta = with stdenv.lib; {
+      description = "Defines override classes that should be included with pies only if running on Python2";
+      homepage = https://github.com/timothycrosley/pies;
+      license = licenses.mit;
+    };
+  };
+
 
   poppler-qt4 = buildPythonPackage rec {
     name = "poppler-qt4-${version}";
@@ -5525,15 +5589,13 @@ let
   };
 
   gevent = buildPythonPackage rec {
-    name = "gevent-1.0.1";
+    name = "gevent-1.0.2";
     disabled = isPy3k || isPyPy;  # see https://github.com/surfly/gevent/issues/248
 
     src = pkgs.fetchurl {
       url = "https://pypi.python.org/packages/source/g/gevent/${name}.tar.gz";
-      sha256 = "0hyzfb0gcx9pm5c2igan8y57hqy2wixrwvdjwsaivxsqs0ay49s6";
+      sha256 = "0cds7yvwdlqmd590i59vzxaviwxk4js6dkhnmdxb3p1xac7wmq9s";
     };
-
-    patches = [ ../development/python-modules/gevent_sslwrap.patch ];
 
     buildInputs = with self; [ pkgs.libev ];
     propagatedBuildInputs = optionals (!isPyPy) [ self.greenlet ];
@@ -5773,13 +5835,18 @@ let
 
   greenlet = buildPythonPackage rec {
     name = "greenlet-${version}";
-    version = "0.4.5";
+    version = "0.4.7";
     disabled = isPyPy;  # builtin for pypy
 
     src = pkgs.fetchurl {
       url = "https://pypi.python.org/packages/source/g/greenlet/${name}.zip";
-      sha256 = "1gidivqcpn6i6k01bf3hgcn0m68h4b9srhpff9kgnk0c287z145r";
+      sha256 = "1zlmsygjw69xlq56vz1z5ivzy9bwc7knjaykn2yy2hv4w2j4yb7k";
     };
+
+    # see https://github.com/python-greenlet/greenlet/issues/85
+    preCheck = ''
+      rm tests/test_leaks.py
+    '';
 
     meta = with stdenv.lib; {
       homepage = http://pypi.python.org/pypi/greenlet;
@@ -5806,6 +5873,30 @@ let
   };
 
   gyp = buildPythonPackage rec {
+    name = "gyp-${version}";
+    version = "2015-05-15";
+
+    src = pkgs.fetchgit {
+      url = "https://chromium.googlesource.com/external/gyp.git";
+      rev = "9f594095c5b14f8bc518081a660e77890c294861";
+      sha256 = "1xqi44alnw9c31jg2hz7flz5nabq003b4jyin12h3s9zl82y6vd5";
+    };
+
+    patches = optionals pkgs.stdenv.isDarwin [
+      ../development/python-modules/gyp/no-darwin-cflags.patch
+    ];
+
+    meta = with stdenv.lib; {
+      description = "A tool to generate native build files";
+      homepage = https://chromium.googlesource.com/external/gyp/+/master/README.md;
+      license = licenses.bsd3;
+      maintainers = with maintainers; [ codyopel ];
+      platforms = platforms.all;
+    };
+  };
+
+  # Needed to build Chromium until #7402 is fixed.
+  gyp_svn1977 = pkgs.lowPrio (buildPythonPackage rec {
     rev = "1977";
     name = "gyp-r${rev}";
 
@@ -5824,7 +5915,7 @@ let
       license = stdenv.lib.licenses.bsd3;
       description = "Generate Your Projects";
     };
-  };
+  });
 
   guessit = buildPythonPackage rec {
     version = "0.9.4";
@@ -6180,6 +6271,21 @@ let
     };
   };
 
+  ipaddress = buildPythonPackage rec {
+    name = "ipaddress-1.0.7";
+
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/source/i/ipaddress/${name}.tar.gz";
+      md5 = "5d9ecf415cced476f7781cf5b9ef70c4";
+    };
+
+    meta = with stdenv.lib; {
+      description = "Port of the 3.3+ ipaddress module to 2.6, 2.7, and 3.2";
+      homepage = https://github.com/phihag/ipaddress;
+      license = licenses.psfl;
+    };
+  };
+
   ipdb = buildPythonPackage rec {
     name = "ipdb-0.8";
     disabled = isPyPy;  # setupterm: could not find terminfo database
@@ -6210,6 +6316,25 @@ let
       homepage = https://bitbucket.org/micktwomey/pyiso8601/;
       description = "Simple module to parse ISO 8601 dates";
       maintainers = [ stdenv.lib.maintainers.phreedom ];
+    };
+  };
+
+  isort = buildPythonPackage rec {
+    name = "isort-3.9.6";
+
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/source/i/isort/${name}.tar.gz";
+      md5 = "c0f4a7b16fde265f2ff4842c3e1cdd05";
+    };
+
+    buildInputs = with self; [ mock pytest ];
+
+    propagatedBuildInputs = with self; [ natsort pies ];
+
+    meta = with stdenv.lib; {
+      description = "A Python utility / library to sort Python imports";
+      homepage = https://github.com/timothycrosley/isort;
+      license = licenses.mit;
     };
   };
 
@@ -7723,11 +7848,11 @@ let
   };
 
   numpy = buildPythonPackage ( rec {
-    name = "numpy-1.8.2";
+    name = "numpy-1.9.2";
 
     src = pkgs.fetchurl {
       url = "mirror://sourceforge/numpy/${name}.tar.gz";
-      sha256 = "1gcxlk3mf43pzpxvbw8kcfg173g4105j9szsfc1kxwablail6myf";
+      sha256 = "0apgmsk9jlaphb2dp1zaxqzdxkf69h1y3iw2d1pcnkj31cmmypij";
     };
 
     disabled = isPyPy;  # WIP
@@ -7781,13 +7906,13 @@ let
   };
 
   livestreamer = buildPythonPackage rec {
-    version = "1.11.1";
+    version = "1.12.2";
     name = "livestreamer-${version}";
     disabled = isPyPy;
 
     src = pkgs.fetchurl {
       url = "https://github.com/chrippa/livestreamer/archive/v${version}.tar.gz";
-      sha256 = "1hic3z5any64gn2b0gs1b7m34bzgzv71inr8wgjq59pwf8mbrqk9";
+      sha256 = "1fp3d3z2grb1ls97smjkraazpxnvajda2d1g1378s6gzmda2jvjd";
     };
 
     buildInputs = with self; [ pkgs.makeWrapper ];
@@ -7803,6 +7928,7 @@ let
         services and pipes them into a video player of choice.
       '';
       license = stdenv.lib.licenses.bsd2;
+      maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
     };
   };
 
@@ -9072,6 +9198,28 @@ let
       license = "BSD";
     };
   };
+
+  pyblosxom = buildPythonPackage rec {
+    name = "pyblosxom-${version}";
+    disabled = isPy3k;
+    version = "1.5.3";
+    # FAIL:test_generate_entry and test_time
+    # both tests fail due to time issue that doesn't seem to matter in practice
+    doCheck = false; 
+    src = pkgs.fetchurl {
+      url = "https://github.com/pyblosxom/pyblosxom/archive/v${version}.tar.gz";
+      sha256 = "0de9a7418f4e6d1c45acecf1e77f61c8f96f036ce034493ac67124626fd0d885";
+    };
+  
+    propagatedBuildInputs = with self; [ pygments markdown ];
+
+    meta = with stdenv.lib; {
+      homepage = "http://pyblosxom.github.io";
+      description = "File-based blogging engine";
+      license = licenses.mit;
+    };
+  };
+
 
   pycapnp = buildPythonPackage rec {
     name = "pycapnp-0.5.1";
@@ -10928,6 +11076,22 @@ let
 
   });
 
+  rpy2 = buildPythonPackage rec {
+    name = "rpy2-2.5.6";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/source/r/rpy2/${name}.tar.gz";
+      md5 = "a36e758b633ce6aec6a5f450bfee980f";
+    };
+    buildInputs = with pkgs; [ readline R pcre lzma bzip2 zlib icu ];
+    propagatedBuildInputs = [ self.singledispatch ];
+    meta = {
+      homepage = http://rpy.sourceforge.net/rpy2;
+      description = "Python interface to R";
+      license = stdenv.lib.licenses.gpl2Plus;
+      maintainers = [ stdenv.lib.maintainers.joelmo ];
+    };
+  };
+
   rpyc = buildPythonPackage rec {
     name = "rpyc-${version}";
     version = "3.3.0";
@@ -11063,11 +11227,11 @@ let
 
 
   scipy = buildPythonPackage rec {
-    name = "scipy-0.14.0";
+    name = "scipy-0.15.1";
 
     src = pkgs.fetchurl {
       url = "http://pypi.python.org/packages/source/s/scipy/${name}.tar.gz";
-      md5 = "d7c7f4ccf8b07b08d6fe49d5cd51f85d";
+      sha256 = "16i5iksaas3m0hgbxrxpgsyri4a9ncbwbiazlhx5d6lynz1wn4m2";
     };
 
     buildInputs = [ pkgs.gfortran ];

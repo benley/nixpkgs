@@ -34,7 +34,6 @@ let
       "Kexiv2" = "libkexiv2";
       "Kdcraw" = "libkdcraw";
       "Kipi" = "libkipi";
-      "LibKMahjongg" = "libkmahjongg";
       "LibKonq" = "kde-baseapps";
       "Marble" = "marble";
     };
@@ -64,6 +63,7 @@ let
     (with pkgs;
       {
         ACL = acl;
+        AccountsQt5 = accounts-qt.override { inherit qt5; };
         Akonadi = kde4.akonadi;
         Alsa = alsaLib;
         Automoc4 = automoc4;
@@ -71,9 +71,10 @@ let
         BISON = bison;
         Baloo = kde4.baloo;
         Boost = boost156;
+        CFitsio = cfitsio;
+        CUPS = cups;
         Canberra = libcanberra;
         Cdparanoia = cdparanoia;
-        CUPS = cups;
         DBusMenuQt = libdbusmenu_qt;
         DjVuLibre = djvulibre;
         ENCHANT = enchant;
@@ -95,12 +96,16 @@ let
         GSL = gsl;
         HUNSPELL = hunspell;
         HUpnp = herqq;
+        INDI = indilib;
+        Intltool = intltool;
         Jasper = jasper;
         KActivities = kde4.kactivities;
+        KDEGames = kde4.libkdegames;
         LCMS2 = lcms2;
         Ldap = openldap;
         LibAttica = attica;
         LibGcrypt = libgcrypt;
+        LibKMahjongg = kde4.libkmahjongg;
         LibSSH = libssh;
         LibSpectre = libspectre;
         LibVNCServer = libvncserver;
@@ -116,12 +121,14 @@ let
         PythonLibrary = python;
         Qalculate = libqalculate;
         QCA2 = qca2;
+        Qca-qt5 = qca-qt5.override { inherit qt5; };
         QImageBlitz = qimageblitz;
         QJSON = qjson;
         Qt4 = qt4;
         Samba = samba;
         Sasl2 = cyrus_sasl;
         SharedDesktopOntologies = shared_desktop_ontologies;
+        SignOnQt5 = signon.override { inherit qt5; };
         SndFile = libsndfile;
         Speechd = speechd;
         TIFF = libtiff;
@@ -131,6 +138,7 @@ let
         TunePimp = libtunepimp;
         UDev = udev;
         USB = libusb;
+        Xplanet = xplanet;
         Xscreensaver = xscreensaver;
         Xsltproc = libxslt;
       }
@@ -193,17 +201,9 @@ let
         nativeBuildInputs = super.ffmpegthumbs.nativeBuildInputs ++ [pkgconfig];
       };
 
-      kaccounts-integration =
-        let accounts-qt = pkgs.accounts-qt.override { inherit qt5; };
-            signon = pkgs.signon.override { inherit qt5; };
-        in super.kaccounts-integration // {
-          buildInputs = super.kaccounts-integration.buildInputs
-            ++ [ accounts-qt signon ];
-        };
-
       kaccounts-providers = super.kaccounts-providers // {
         buildInputs = super.kaccounts-providers.buildInputs
-          ++ (with pkgs; [ intltool libaccounts-glib ]);
+          ++ (with pkgs; [ libaccounts-glib ]);
         preConfigure = ''
           ${super.kaccounts-providers.preConfigure or ""}
           substituteInPlace webkit-options/CMakeLists.txt \
@@ -303,6 +303,12 @@ let
         buildInputs = super.kgpg.buildInputs ++ [boost];
       };
 
+      khangman = super.khangman // {
+        buildInputs =
+          super.khangman.buildInputs
+          ++ [ kf5.kio ];
+      };
+
       kmix = with pkgs; super.kmix // {
         nativeBuildInputs = super.kmix.nativeBuildInputs ++ [pkgconfig];
         cmakeFlags = [ "-DKMIX_KF5_BUILD=ON" ];
@@ -321,7 +327,33 @@ let
       krfb = super.krfb // {
         buildInputs =
           super.krfb.buildInputs
-          ++ [pkgs.xlibs.libXtst kde4.telepathy.common_internals];
+          ++ [pkgs.xlibs.libXtst kdeApps.ktp-common-internals];
+      };
+
+      kstars = super.kstars // {
+        buildInputs =
+          super.kstars.buildInputs
+          ++ (with kf5; [ kparts ])
+          ++ [ pkgs.cfitsio ];
+      };
+
+      ktp-accounts-kcm = super.ktp-accounts-kcm // {
+        buildInputs =
+          super.ktp-accounts-kcm.buildInputs
+          ++ [ pkgs.libaccounts-glib ];
+      };
+
+      ktp-common-internals = super.ktp-common-internals // {
+        buildInputs =
+          super.ktp-common-internals.buildInputs
+          ++ (with kf5; [ kdelibs4support kparts ])
+          ++ [ pkgs.libotr ]; # needed for ktp-text-ui
+      };
+
+      lokalize = super.lokalize // {
+        buildInputs =
+          super.lokalize.buildInputs
+          ++ [ kf5.kdbusaddons ];
       };
 
       libkdcraw = with pkgs; super.libkdcraw // {
@@ -351,6 +383,12 @@ let
 
       libksane = with pkgs; super.libksane // {
         buildInputs = super.libksane.buildInputs ++ [scope.KDE4 saneBackends];
+      };
+
+      okular = super.okular // {
+        nativeBuildInputs =
+          super.okular.nativeBuildInputs
+          ++ [ pkgs.pkgconfig ];
       };
 
       rocs = super.rocs // {
