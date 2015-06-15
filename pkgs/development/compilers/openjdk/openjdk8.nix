@@ -65,6 +65,8 @@ let
     ./fix-java-home-jdk8.patch
     ./read-truststore-from-env-jdk8.patch
     ./currency-date-range-jdk8.patch
+    ./JDK-8074312-hotspot.patch
+
   ];
   preConfigure = ''
     chmod +x configure
@@ -134,7 +136,7 @@ let
     # Generate certificates.
     pushd $jre/lib/openjdk/jre/lib/security
     rm cacerts
-    perl ${./generate-cacerts.pl} $jre/lib/openjdk/jre/bin/keytool ${cacert}/etc/ca-bundle.crt
+    perl ${./generate-cacerts.pl} $jre/lib/openjdk/jre/bin/keytool ${cacert}/ca-bundle.crt
     popd
 
     ln -s $out/lib/openjdk/bin $out/bin

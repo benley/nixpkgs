@@ -49,6 +49,15 @@ stdenv.mkDerivation rec {
     (mkEnable unicode     "widec"       null)
     (mkEnable true        "ext-colors"  null)
     (mkEnable true        "ext-mouse"   null)
+  ] ++ stdenv.lib.optionals stdenv.isCygwin [
+    "--enable-sp-funcs"
+    "--enable-term-driver"
+    "--enable-const"
+    "--enable-ext-colors"
+    "--enable-ext-mouse"
+    "--enable-reentrant"
+    "--enable-colorfgbg"
+    "--enable-tcap-names"
   ];
 
   # PKG_CONFIG_LIBDIR is where the *.pc files will be installed. If this
@@ -60,6 +69,8 @@ stdenv.mkDerivation rec {
   preConfigure = ''
     export PKG_CONFIG_LIBDIR="$out/lib/pkgconfig"
     mkdir -p "$PKG_CONFIG_LIBDIR"
+  '' + stdenv.lib.optionalString stdenv.isCygwin ''
+    sed -i -e 's,LIB_SUFFIX="t,LIB_SUFFIX=",' configure
   '';
 
   selfNativeBuildInput = true;
@@ -71,7 +82,7 @@ stdenv.mkDerivation rec {
   # When building a wide-character (Unicode) build, create backward
   # compatibility links from the the "normal" libraries to the
   # wide-character libraries (e.g. libncurses.so to libncursesw.so).
-  postInstall = if unicode then ''
+  postInstall = if unicode then (''
     # Create a non-abi versioned config
     cfg=$(basename $out/bin/ncurses*-config)
     ln -svf $cfg $out/bin/ncursesw-config
@@ -85,17 +96,23 @@ stdenv.mkDerivation rec {
     libs="$(find $out/lib -name \*w.a | sed 's,.*lib\(.*\)w.a.*,\1,g')"
     for lib in $libs; do
       if [ -e "$out/lib/lib''${lib}w.so" ]; then
-        echo "INPUT(-l''${lib}w)" > $out/lib/lib$lib.so
+        ln -svf lib''${lib}w.so $out/lib/lib$lib.so
+        ln -svf lib''${lib}w.so.${abiVersion} $out/lib/lib$lib.so.${abiVersion}
       fi
       ln -svf lib''${lib}w.a $out/lib/lib$lib.a
       ln -svf ''${lib}w.pc $out/lib/pkgconfig/$lib.pc
     done
 
     # Create curses compatability
-    echo "INPUT(-lncursesw)" > $out/lib/libcursesw.so
-    echo "INPUT(-lncursesw)" > $out/lib/libcurses.so
-    ln -svf libncurses
-  '' else ''
+    ln -svf libncursesw.so $out/lib/libcursesw.so
+    ln -svf libncursesw.so $out/lib/libcurses.so
+  '' + stdenv.lib.optionalString stdenv.isCygwin ''
+    for lib in $libs; do
+      if test -e $out/lib/lib''${lib}w.dll.a; then
+          ln -svf lib''${lib}w.dll.a $out/lib/lib$lib.dll.a
+      fi
+    done
+  '') else ''
     # Create a non-abi versioned config
     cfg=$(basename $out/bin/ncurses*-config)
     ln -svf $cfg $out/bin/ncurses-config
@@ -104,7 +121,7 @@ stdenv.mkDerivation rec {
     ln -svf . $out/include/ncurses
 
     # Create curses compatability
-    echo "INPUT(-lncurses)" > $out/lib/libcurses.so
+    ln -svf libncurses.so $out/lib/libcurses.so
   '';
 
   meta = {

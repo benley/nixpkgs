@@ -92,9 +92,6 @@ self: super: {
   # https://bitbucket.org/FlorianHartwig/attobencode/issue/1
   AttoBencode = dontCheck super.AttoBencode;
 
-  # bos/attoparsec#92
-  attoparsec = dontCheck super.attoparsec;
-
   # Test suite fails with some (seemingly harmless) error.
   # https://code.google.com/p/scrapyourboilerplate/issues/detail?id=24
   syb = dontCheck super.syb;
@@ -116,18 +113,13 @@ self: super: {
   # support a moving target". Go figure.
   barecheck = doJailbreak super.barecheck;
 
-  syb-with-class = appendPatch super.syb-with-class (pkgs.fetchpatch {
-    url = "https://github.com/seereason/syb-with-class/compare/adc86a9...719e567.patch";
-    sha256 = "1lwwvxyhxcmppdapbgpfhwi7xc2z78qir03xjrpzab79p2qyq7br";
-  });
-
   # https://github.com/kazu-yamamoto/unix-time/issues/30
   unix-time = dontCheck super.unix-time;
 
   # Until the changes have been pushed to Hackage
   mueval = appendPatch super.mueval (pkgs.fetchpatch {
     url = "https://github.com/gwern/mueval/commit/c41aa40ed63b74c069d1e4e3caa8c8d890cde960.patch";
-    sha256 = "1gs8p89d1qsrd1qycbhf6kv4qw0sbb8m6dy106dqkmdzcjzcyq74";
+    sha256 = "0h1lx4z15imq009k0qmwkn5l3hmigw463ahvwffdnszi2n618kpg";
   });
   present = appendPatch super.present (pkgs.fetchpatch {
     url = "https://github.com/chrisdone/present/commit/6a61f099bf01e2127d0c68f1abe438cd3eaa15f7.patch";
@@ -166,7 +158,7 @@ self: super: {
 
   misfortune = appendPatch super.misfortune (pkgs.fetchpatch {
     url = "https://github.com/mokus0/misfortune/commit/9e0a38cf8d59a0de9ae1156034653f32099610e4.patch";
-    sha256 = "15frwdallm3i6k7mil26bbjd4wl6k9h20ixf3cmyris3q3jhlcfh";
+    sha256 = "01m1l199ihq85j9pyc3n0wqv1z4my453hhhcvg3yz3gpz3lf224r";
   });
 
   timezone-series = doJailbreak super.timezone-series;
@@ -182,10 +174,6 @@ self: super: {
   jsaddle = let jsaddle' = disableCabalFlag super.jsaddle "ghcjs";
             in addBuildDepends jsaddle' [ self.glib self.gtk3 self.webkitgtk3
                                           self.webkitgtk3-javascriptcore ];
-
-  # https://github.com/BNFC/bnfc/issues/137
-  BNFC = markBrokenVersion "2.7.1" super.BNFC;
-  cubical = dontDistribute super.cubical;
 
   # contacted maintainer by e-mail
   cmdlib = markBrokenVersion "0.3.5" super.cmdlib;
@@ -238,7 +226,6 @@ self: super: {
 
   # Broken with GHC 7.10.x.
   aeson_0_7_0_6 = markBroken super.aeson_0_7_0_6;
-  c2hs_0_20_1 = markBroken super.c2hs_0_20_1;
   Cabal_1_20_0_3 = markBroken super.Cabal_1_20_0_3;
   cabal-install_1_18_1_0 = markBroken super.cabal-install_1_18_1_0;
   containers_0_4_2_1 = markBroken super.containers_0_4_2_1;
@@ -287,5 +274,22 @@ self: super: {
   HLearn-approximation = dontDistribute super.HLearn-approximation;
   HLearn-distributions = dontDistribute super.HLearn-distributions;
   HLearn-classification = dontDistribute super.HLearn-classification;
+
+  # Won't work with LLVM 3.5.
+  llvm-general = markBrokenVersion "3.4.5.3" super.llvm-general;
+
+  # Ugly hack to trigger a rebuild to fix the broken package on Hydra.
+  asn1-encoding = appendConfigureFlag super.asn1-encoding "-fignore-me-1";
+  asn1-types = appendConfigureFlag super.asn1-types "-fignore-me-1";
+  cmdargs = appendConfigureFlag super.cmdargs "-fignore-me-1";
+  crypto-api = appendConfigureFlag super.crypto-api "-fignore-me-1";
+  crypto-pubkey-types = appendConfigureFlag super.crypto-pubkey-types "-fignore-me-1";
+  hourglass = appendConfigureFlag super.hourglass "-fignore-me-1";
+  math-functions = appendConfigureFlag super.math-functions "-fignore-me-1";
+  tagsoup = appendConfigureFlag super.tagsoup "-fignore-me-1";
+  X11 = appendConfigureFlag super.X11 "-fignore-me-1";
+  x509 = appendConfigureFlag super.x509 "-fignore-me-1";
+  x509-store = appendConfigureFlag super.x509-store "-fignore-me-1";
+  x509-system = appendConfigureFlag super.x509-system "-fignore-me-1";
 
 }

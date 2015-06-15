@@ -1592,7 +1592,7 @@ let
   };
 
   logrus = buildGoPackage rec {
-    rev = "v0.7.3";
+    rev = "v0.8.2";
     name = "logrus-${stdenv.lib.strings.substring 0 7 rev}";
     goPackagePath = "github.com/Sirupsen/logrus";
 
@@ -1602,7 +1602,7 @@ let
       inherit rev;
       owner = "Sirupsen";
       repo = "logrus";
-      sha256 = "1sxksbarllmqb8wz5b2wbwr6q2i32vqasf7bpz4djywy3ig7jwk8";
+      sha256 = "0isihf185bw54yc72mbkf3cgfh7xj0x8ky04fs52xpj6vrmd72bv";
     };
 
     propagatedBuildInputs = [ airbrake-go bugsnag-go raven-go ];
@@ -1674,8 +1674,6 @@ let
       repo = "mesos_stats";
       sha256 = "18ggyjf4nyn77gkn16wg9krp4dsphgzdgcr3mdflv6mvbr482ar4";
     };
-
-    propagatedBuildInputs = [ prometheus.client_golang glog ];
   };
 
   mgo = buildGoPackage rec {
@@ -1991,6 +1989,19 @@ let
       sha256 = "11a7v1fjzhhwsl128znjcf5v7v6129xjgkdpym2lial4lac1dhm9";
     };
     buildInputs = [ protobuf ];
+  };
+
+  prometheus.log = buildGoPackage rec {
+    name = "prometheus-log-${version}";
+    version = "git-2015-05-29";
+    goPackagePath = "github.com/prometheus/log";
+    src = fetchFromGitHub {
+      rev = "439e5db48fbb50ebbaf2c816030473a62f505f55";
+      owner = "prometheus";
+      repo = "log";
+      sha256 = "1fl23gsw2hn3c1y91qckr661sybqcw2gqnd1gllxn3hp6p2w6hxv";
+    };
+    propagatedBuildInputs = [ logrus ];
   };
 
   prometheus.procfs = buildGoPackage rec {
@@ -2415,13 +2426,26 @@ let
   };
 
   yaml-v1 = buildGoPackage rec {
-    rev = "b0c168ac0cf9493da1f9bb76c34b26ffef940b4a";
-    name = "yaml-v1-${stdenv.lib.strings.substring 0 7 rev}";
+    name = "yaml-v1-${version}";
+    version = "git-2015-05-01";
     goPackagePath = "gopkg.in/yaml.v1";
-    src = fetchgit {
-      inherit rev;
-      url = "https://github.com/go-yaml/yaml.git";
+    src = fetchFromGitHub {
+      rev = "b0c168ac0cf9493da1f9bb76c34b26ffef940b4a";
+      owner = "go-yaml";
+      repo = "yaml";
       sha256 = "0jbdy41pplf2d1j24qwr8gc5qsig6ai5ch8rwgvg72kq9q0901cy";
+    };
+  };
+
+  yaml-v2 = buildGoPackage rec {
+    name = "yaml-v2-${version}";
+    version = "git-2015-05-19";
+    goPackagePath = "gopkg.in/yaml.v2";
+    src = fetchFromGitHub {
+      rev = "c1cd2254a6dd314c9d73c338c12688c9325d85c6";
+      owner = "go-yaml";
+      repo = "yaml";
+      sha256 = "0xhv0i700hh8lczrwxhn3c99npqma7k4337qrh6k36falm0jpp4s";
     };
   };
 
