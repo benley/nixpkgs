@@ -9805,6 +9805,15 @@ let
       ];
   };
 
+  linux_4_2_samus = makeOverridable (import ../os-specific/linux/kernel/linux-4.2-samus.nix) {
+    inherit fetchurl stdenv perl buildLinux;
+    kernelPatches = [ kernelPatches.bridge_stp_helper ];
+      #++ [ kernelPatches.samus_generated
+      #     kernelPatches.samus_monkey
+      #     kernelPatches.samus_hdmi_hotplug
+      #   ];
+  };
+
   linux_testing = makeOverridable (import ../os-specific/linux/kernel/linux-testing.nix) {
     inherit fetchurl stdenv perl buildLinux;
     kernelPatches = [ kernelPatches.bridge_stp_helper ]

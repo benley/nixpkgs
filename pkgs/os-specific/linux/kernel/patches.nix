@@ -98,4 +98,18 @@ rec {
       patch = ./crc-regression.patch;
     };
 
+  samus_generated = {
+    name = "samus-generated";
+    patch = ./chromebook-samus-patches/generated.patch;
+  };
+
+  samus_hdmi_hotplug = {
+    name = "samus-hdmi-hotplug";
+    patch = ./chromebook-samus-patches/hdmi_hotplug.patch;
+  };
+
+  samus_monkey = {
+    name = "samus-monkey";
+    patch = ./chromebook-samus-patches/monkey.patch;
+  };
 }
