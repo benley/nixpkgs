@@ -95,7 +95,7 @@ let
       # Create the config file.
       echo "generating kernel configuration..."
       echo "$kernelConfig" > kernel-config
-      DEBUG=1 ARCH=$arch KERNEL_CONFIG=kernel-config AUTO_MODULES=$autoModules \
+      DEBUG=0 ARCH=$arch KERNEL_CONFIG=kernel-config AUTO_MODULES=$autoModules \
            SRC=../$sourceRoot perl -w $generateConfig
     '';
 

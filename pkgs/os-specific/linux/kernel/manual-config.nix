@@ -90,7 +90,7 @@ let
 
       prePatch = ''
         for mf in $(find -name Makefile -o -name Makefile.include -o -name install.sh); do
-            echo "stripping FHS paths in \`$mf'..."
+            test -n "$DEBUG" && echo "stripping FHS paths in \`$mf'..."
             sed -i "$mf" -e 's|/usr/bin/||g ; s|/bin/||g ; s|/sbin/||g'
         done
         sed -i Makefile -e 's|= depmod|= ${kmod}/sbin/depmod|'
