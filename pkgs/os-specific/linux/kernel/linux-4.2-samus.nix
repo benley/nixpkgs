@@ -1,7 +1,7 @@
 { stdenv, fetchurl, ... } @ args:
 
 import ./generic.nix (args // rec {
-  version = "4.2";
+  version = "4.2-samus";
   modDirVersion = "4.2.0";
   extraMeta.branch = "4.2";
 
