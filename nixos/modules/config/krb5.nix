@@ -21,23 +21,25 @@ in
       };
 
       defaultRealm = mkOption {
-        default = "ATENA.MIT.EDU";
+        type = types.str;
         description = "Default realm.";
       };
 
       domainRealm = mkOption {
-        default = "atena.mit.edu";
+        type = types.str;
         description = "Default domain realm.";
       };
 
-      kdc = mkOption {
-        default = "kerberos.mit.edu";
-        description = "Kerberos Domain Controller.";
+      kdcs = mkOption {
+        type = types.nullOr (types.listOf types.str);
+        description = "List of Kerberos domain controllers.";
+        default = null;
       };
 
       kerberosAdminServer = mkOption {
-        default = "kerberos.mit.edu";
-        description = "Kerberos Admin Server.";
+        type = types.nullOr types.str;
+        description = "Kerberos admin server.";
+        default = null;
       };
 
     };
@@ -86,100 +88,26 @@ in
             }
             fcc-mit-ticketflags = true
 
-        [realms]
-            ${cfg.defaultRealm} = {
-                kdc = ${cfg.kdc}
-                admin_server = ${cfg.kerberosAdminServer}
-                #kpasswd_server = ${cfg.kerberosAdminServer}
-            }
-            ATHENA.MIT.EDU = {
-                kdc = kerberos.mit.edu:88
-                kdc = kerberos-1.mit.edu:88
-                kdc = kerberos-2.mit.edu:88
-                admin_server = kerberos.mit.edu
-                default_domain = mit.edu
-            }
-            MEDIA-LAB.MIT.EDU = {
-                kdc = kerberos.media.mit.edu
-                admin_server = kerberos.media.mit.edu
-            }
-            ZONE.MIT.EDU = {
-                kdc = casio.mit.edu
-                kdc = seiko.mit.edu
-                admin_server = casio.mit.edu
-            }
-            MOOF.MIT.EDU = {
-                kdc = three-headed-dogcow.mit.edu:88
-                kdc = three-headed-dogcow-1.mit.edu:88
-                admin_server = three-headed-dogcow.mit.edu
-            }
-            CSAIL.MIT.EDU = {
-                kdc = kerberos-1.csail.mit.edu
-                kdc = kerberos-2.csail.mit.edu
-                admin_server = kerberos.csail.mit.edu
-                default_domain = csail.mit.edu
-                krb524_server = krb524.csail.mit.edu
-            }
-            IHTFP.ORG = {
-                kdc = kerberos.ihtfp.org
-                admin_server = kerberos.ihtfp.org
-            }
-            GNU.ORG = {
-                kdc = kerberos.gnu.org
-                kdc = kerberos-2.gnu.org
-                kdc = kerberos-3.gnu.org
-                admin_server = kerberos.gnu.org
-            }
-            1TS.ORG = {
-                kdc = kerberos.1ts.org
-                admin_server = kerberos.1ts.org
-            }
-            GRATUITOUS.ORG = {
-                kdc = kerberos.gratuitous.org
-                admin_server = kerberos.gratuitous.org
-            }
-            DOOMCOM.ORG = {
-                kdc = kerberos.doomcom.org
-                admin_server = kerberos.doomcom.org
-            }
-            ANDREW.CMU.EDU = {
-                kdc = vice28.fs.andrew.cmu.edu
-                kdc = vice2.fs.andrew.cmu.edu
-                kdc = vice11.fs.andrew.cmu.edu
-                kdc = vice12.fs.andrew.cmu.edu
-                admin_server = vice28.fs.andrew.cmu.edu
-                default_domain = andrew.cmu.edu
-            }
-            CS.CMU.EDU = {
-                kdc = kerberos.cs.cmu.edu
-                kdc = kerberos-2.srv.cs.cmu.edu
-                admin_server = kerberos.cs.cmu.edu
-            }
-            DEMENTIA.ORG = {
-                kdc = kerberos.dementia.org
-                kdc = kerberos2.dementia.org
-                admin_server = kerberos.dementia.org
-            }
-            stanford.edu = {
-                kdc = krb5auth1.stanford.edu
-                kdc = krb5auth2.stanford.edu
-                kdc = krb5auth3.stanford.edu
-                admin_server = krb5-admin.stanford.edu
-                default_domain = stanford.edu
-            }
+      ''
+      + (optionalString ((!builtins.isNull cfg.kdcs) ||
+                         (!builtins.isNull cfg.kerberosAdminServer))
+         ''
+           [realms]
+               ${cfg.defaultRealm} = {
+         '')
+      + (optionalString (!builtins.isNull cfg.kdcs)
+          (builtins.concatStringsSep ""
+            (map (x: "      kdc = ${x}\n") cfg.kdcs)))
+      + (optionalString (!builtins.isNull cfg.kerberosAdminServer)
+         "      admin_server = ${cfg.kerberosAdminServer}\n")
+      + (optionalString ((!builtins.isNull cfg.kdcs) ||
+                         (!builtins.isNull cfg.kerberosAdminServer))
+         "    }\n")
+      + ''
 
         [domain_realm]
             .${cfg.domainRealm} = ${cfg.defaultRealm}
             ${cfg.domainRealm} = ${cfg.defaultRealm}
-            .mit.edu = ATHENA.MIT.EDU
-            mit.edu = ATHENA.MIT.EDU
-            .media.mit.edu = MEDIA-LAB.MIT.EDU
-            media.mit.edu = MEDIA-LAB.MIT.EDU
-            .csail.mit.edu = CSAIL.MIT.EDU
-            csail.mit.edu = CSAIL.MIT.EDU
-            .whoi.edu = ATHENA.MIT.EDU
-            whoi.edu = ATHENA.MIT.EDU
-            .stanford.edu = stanford.edu
 
         [logging]
             kdc = SYSLOG:INFO:DAEMON
@@ -198,7 +126,5 @@ in
                 initial_timeout = 1
             }
       '';
-
   };
-
 }
