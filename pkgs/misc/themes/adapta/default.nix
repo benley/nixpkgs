@@ -2,7 +2,7 @@
 
 stdenv.mkDerivation rec {
   name = "adapta-gtk-theme-${version}";
-  version = "3.89.1.66";
+  version = "3.89.2.50";
 
   meta = with stdenv.lib; {
     description = "An adaptive GTK+ theme based on Material Design";
@@ -13,10 +13,10 @@ stdenv.mkDerivation rec {
   };
 
   src = fetchFromGitHub {
-    owner = "tista500";
-    repo = "Adapta";
+    owner = "adapta-project";
+    repo = "adapta-gtk-theme";
     rev = version;
-    sha256 = "08g941xgxg7i8g1srn3zdxz1nxm24bkrg5cx9ipjqk5cwsck7470";
+    sha256 = "0v6v4x3qgf8p6wvvsr8r78ffw7ng5zc0nfnvbdq7hlmw7jir0gd4";
   };
 
   preferLocalBuild = true;
