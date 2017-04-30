@@ -12,6 +12,7 @@ let
   configFile = writeText "NetworkManager.conf" ''
     [main]
     plugins=keyfile
+    dns=${if cfg.useDnsmasq then "dnsmasq" else "default"}
 
     [keyfile]
     ${optionalString (config.networking.hostName != "")
@@ -137,6 +138,17 @@ in {
         description = ''
           A list of name servers that should be inserted before
           the ones configured in NetworkManager or received by DHCP.
+        '';
+      };
+
+      useDnsmasq = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Enable NetworkManager's dnsmasq integration. NetworkManager will run
+          dnsmasq as a local caching nameserver, using a "split DNS"
+          configuration if you are connected to a VPN, and then update
+          resolv.conf to point to the local nameserver.
         '';
       };
 
