@@ -17608,6 +17608,8 @@ with pkgs;
 
   kops = callPackage ../applications/networking/cluster/kops { };
 
+  stern = callPackage ../applications/networking/cluster/stern { };
+
   lilypond = callPackage ../misc/lilypond { guile = guile_1_8; };
   lilypond-unstable = callPackage ../misc/lilypond/unstable.nix { guile = guile_1_8; };
 
