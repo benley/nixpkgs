@@ -4,11 +4,11 @@ let
          then "linux-amd64"
          else "darwin-amd64";
   checksum = if stdenv.isLinux
-             then "0vjkcilxzwvkgcczcbq58nl2j17ddqiysxm5yl13agnmxzvxw6r2"
-             else "1ga9gxzji48vhbaa0pkxd03h89zgjsbikbki9xla1qbvyvqjnw5g";
+             then "06y8xsnbra95mm6mf84g2s0nnkgy5c9p7fisypjkisy79vq4zxwn"
+             else "1gg4dby3kr8rh8msix4p3xbhlb97am8fpvfgx2zk1krg8ymgqrhx";
 
   pname = "helm";
-  version = "2.4.1";
+  version = "2.4.2";
 in
 stdenv.mkDerivation {
   name = "${pname}-${version}";
