@@ -10917,6 +10917,8 @@ with pkgs;
 
   couchpotato = callPackage ../servers/couchpotato {};
 
+  dex-oidc = callPackage ../servers/dex { };
+
   dico = callPackage ../servers/dico { };
 
   dict = callPackage ../servers/dict {
