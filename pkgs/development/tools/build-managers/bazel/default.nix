@@ -60,6 +60,10 @@ stdenv.mkDerivation rec {
   # detector (see com.google.devtools.build.lib.skyframe.FileFunction).
   # Change this to $(mktemp -d) as soon as we figure out why.
 
+  # FIXME: this ends up building nearly all of bazel twice: once in
+  # compile.sh, and again to build the bash completion script.  It would
+  # be nice if we could avoid that, because it takes _forever_.
+
   buildPhase = ''
     export TMPDIR=/tmp
     ./compile.sh
@@ -85,7 +89,7 @@ stdenv.mkDerivation rec {
     mv output/bazel $out/bin
     wrapProgram "$out/bin/bazel" --prefix PATH : "${lib.makeBinPath [ stdenv.cc jdk ]}"
     mkdir -p $out/share/bash-completion/completions $out/share/zsh/site-functions
-    mv output/bazel-complete.bash $out/share/bash-completion/completions/
+    mv output/bazel-complete.bash $out/share/bash-completion/completions/bazel
     cp scripts/zsh_completion/_bazel $out/share/zsh/site-functions/
   '';
 
